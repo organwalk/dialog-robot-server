@@ -1,0 +1,20 @@
+package com.content.contentprocess.controller;
+
+import com.content.contentprocess.entity.request.OrderRequest;
+import com.content.contentprocess.entity.respond.OrderRespond;
+import com.content.contentprocess.service.ContentService;
+import lombok.AllArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+@CrossOrigin
+@RestController
+@RequestMapping("/api")
+@AllArgsConstructor
+public class OrderController {
+    private final ContentService contentService;
+
+    @PostMapping("/order")
+    public OrderRespond getProcessResultByContent(@RequestBody OrderRequest orderRequest){
+        return contentService.getProcessResultByContent(orderRequest);
+    }
+}
