@@ -1,6 +1,9 @@
 package com.content.contentprocess.mapper.redis.Impl;
 
+import com.content.contentprocess.entity.request.DeptRequest;
 import com.content.contentprocess.entity.request.GroupRequest;
+import com.content.contentprocess.entity.request.PersonRequest;
+import com.content.contentprocess.entity.request.UserRequest;
 import com.content.contentprocess.mapper.redis.SaveDataListRedis;
 import lombok.AllArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -20,7 +23,56 @@ public class SaveDataListRedisImpl implements SaveDataListRedis {
             hashKeyName = "group:" + groups.getGroupName() + ":mobile:" + mobile;
             redisTemplate.opsForHash().put(hashKeyName,"deptId",groups.getDeptId());
             redisTemplate.opsForHash().put(hashKeyName,"groupId",groups.getGroupId());
+            redisTemplate.opsForHash().put("mobile:"+mobile,groups.getGroupName(),hashKeyName);
         }
+
+//        Object o = redisTemplate.opsForHash().values(hashKeyName);
+//        List list = (List) o;
+//        System.out.println("o = " + list.get(0));
+        return redisTemplate.getExpire(hashKeyName) != null ? true : false;
+    }
+
+    @Override
+    public boolean saveDeptInfo(DeptRequest deptRequest, String mobile) {
+        List<DeptRequest.Dept> depts = deptRequest.getDept();
+        String hashKeyName = null;
+        for (DeptRequest.Dept dept : depts){
+            for (DeptRequest.Departments departments : dept.getDepartments()){
+                hashKeyName = "dept:" + departments.getName() + ":mobile:" + mobile;
+                redisTemplate.opsForHash().put(hashKeyName,"deptId",departments.getDeptId());
+                redisTemplate.opsForHash().put(hashKeyName,"parentId",departments.getOrder());
+                redisTemplate.opsForHash().put(hashKeyName,"orderId",departments.getOrder());
+                redisTemplate.opsForHash().put("mobile:"+mobile,departments.getName(),hashKeyName);
+            }
+        }
+
+        return redisTemplate.getExpire(hashKeyName) != null ? true : false;
+    }
+
+    @Override
+    public boolean savePerSonInfo(PersonRequest personRequest, String mobile) {
+        List<PersonRequest.Dept> depts = personRequest.getDept();
+        String hashKeyName = null;
+        for (PersonRequest.Dept dept : depts){
+            for (PersonRequest.Users users : dept.getUsers()){
+                hashKeyName = "dept_persion:" + users.getName() + ":mobile:" + mobile;
+                redisTemplate.opsForHash().put(hashKeyName,"id",users.getId());
+                redisTemplate.opsForHash().put(hashKeyName,"mobile",users.getMobile());
+                redisTemplate.opsForHash().put(hashKeyName,"sequence",users.getSequence());
+                redisTemplate.opsForHash().put(hashKeyName,"orgId",users.getOrgId());
+                redisTemplate.opsForHash().put("mobile:"+mobile, users.getName(),hashKeyName);
+            }
+        }
+        return redisTemplate.getExpire(hashKeyName) != null ? true : false;
+    }
+
+    @Override
+    public boolean saveUserInfo(UserRequest userRequest) {
+        String hashKeyName = "user:mobile:"+userRequest.getMobile();
+        redisTemplate.opsForHash().put(hashKeyName,"id",userRequest.getUid());
+        redisTemplate.opsForHash().put(hashKeyName,"name",userRequest.getMobile());
+        redisTemplate.opsForHash().put(hashKeyName,"dept",userRequest.getDeptName());
+        redisTemplate.opsForHash().put("mobile:"+userRequest.getMobile(),"personHash",hashKeyName);
         return redisTemplate.getExpire(hashKeyName) != null ? true : false;
     }
 }

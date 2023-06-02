@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class OrderRespond {
+public class  OrderRespond {
     private long status;
     private boolean success;
     private Object orderRes;

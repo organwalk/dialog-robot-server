@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.util.List;
 
+//请求企业群信息列表
 @Data
 public class GroupRequest {
     private String action;

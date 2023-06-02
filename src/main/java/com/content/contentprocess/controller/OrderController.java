@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
     private final ContentService contentService;
 
-    @PostMapping("/order")
-    public OrderRespond getProcessResultByContent(@RequestBody OrderRequest orderRequest){
-        return contentService.getProcessResultByContent(orderRequest);
+    @PostMapping("/order/{mobile}")
+    public OrderRespond getProcessResultByContent(@PathVariable String mobile,@RequestBody OrderRequest orderRequest){
+        return contentService.getProcessResultByContent(orderRequest,mobile);
     }
 }
