@@ -23,6 +23,6 @@ public class ScheduleTable {
     private String straddr;
     private String strdescrip;
     private String scheduleId;
+    private String members;
     private String action;
-    private List<SMembersTable> members;
 }

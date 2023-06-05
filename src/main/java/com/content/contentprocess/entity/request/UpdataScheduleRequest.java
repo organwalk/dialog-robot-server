@@ -17,14 +17,8 @@ public class UpdataScheduleRequest {
         private Long endtime;
         private boolean iswarn;
         private String straddr;
-        private List<Member> members;
         private String strdescrip;
+        private String members;
     }
-    @Data
-    public static class Member {
-        private String olduid;
-        private String oldname;
-        private String newuid;
-        private String newname;
-    }
+
 }

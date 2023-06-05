@@ -10,5 +10,5 @@ public interface ScheduleService {
     StatusRespond saveScheduleData(SaveScheduleRequest saveScheduleRequest);
     StatusRespond updataScheduleData(UpdataScheduleRequest updataScheduleRequest,String scheduleId);
     StatusRespond deleteScheduleData(String scheduleId);
-    ScheduleListRespond getScheduleDataList(String uid);
+    ScheduleListRespond getScheduleDataList(String uid,String begintime);
 }

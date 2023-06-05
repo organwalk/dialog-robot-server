@@ -19,13 +19,7 @@ public class SaveScheduleRequest {
         private Long endtime;
         private Boolean iswarn;
         private String straddr;
-        private List<Member> members;
+        private String members;
         private String strdescrip;
-    }
-
-    @Data
-    public static class Member {
-        private String uid;
-        private String name;
     }
 }

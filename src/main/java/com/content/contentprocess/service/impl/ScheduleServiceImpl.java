@@ -4,9 +4,7 @@ import com.content.contentprocess.entity.request.SaveScheduleRequest;
 import com.content.contentprocess.entity.request.UpdataScheduleRequest;
 import com.content.contentprocess.entity.respond.ScheduleListRespond;
 import com.content.contentprocess.entity.respond.StatusRespond;
-import com.content.contentprocess.entity.table.SMembersTable;
 import com.content.contentprocess.entity.table.ScheduleTable;
-import com.content.contentprocess.mapper.mysql.SMembersMapper;
 import com.content.contentprocess.mapper.mysql.ScheduleMapper;
 import com.content.contentprocess.service.ScheduleService;
 import lombok.AllArgsConstructor;
@@ -19,7 +17,6 @@ import java.util.List;
 @AllArgsConstructor
 public class ScheduleServiceImpl implements ScheduleService {
     private final ScheduleMapper scheduleMapper;
-    private final SMembersMapper sMembersMapper;
 
     //1.4 存储日程
     @Override
@@ -42,24 +39,11 @@ public class ScheduleServiceImpl implements ScheduleService {
         scheduleTable.setStraddr(scheduleData.getStraddr());
         scheduleTable.setStrdescrip(scheduleData.getStrdescrip());
         scheduleTable.setScheduleId(String.valueOf(saveScheduleRequest.getScheduleId()));
+        scheduleTable.setMembers(scheduleData.getMembers());
         scheduleTable.setAction(saveScheduleRequest.getAction());
 
         //检查日程数据是否插入成功
-        if (scheduleMapper.insert(scheduleTable) > 0){
-            List<SaveScheduleRequest.Member> members = saveScheduleRequest.getData().getMembers();
-            int memberRow = 0;
-            for (SaveScheduleRequest.Member member : members){
-                SMembersTable sMember = new SMembersTable();
-                sMember.setScheduleId(scheduleTable.getScheduleId());
-                sMember.setUid(String.valueOf(member.getUid()));
-                sMember.setName(member.getName());
-                memberRow =  sMembersMapper.insert(sMember);
-            }
-            //检查日程成员数据是否插入成功
-            return memberRow > 0 ? StatusRespond.ok() : StatusRespond.fail();
-        }else {
-            return StatusRespond.fail();
-        }
+        return scheduleMapper.insert(scheduleTable) > 0 ? StatusRespond.ok() : StatusRespond.fail();
     }
 
     //1.5 修改 / 取消日程
@@ -78,19 +62,10 @@ public class ScheduleServiceImpl implements ScheduleService {
             String iswarn = String.valueOf(data.isIswarn());
             String straddr = data.getStraddr();
             String strdescrip = data.getStrdescrip();
-
-            if (scheduleMapper.updateSchedule(content,begintime,endtime,iswarn,straddr,strdescrip,scheduleId) > 0){
-                List<UpdataScheduleRequest.Member> members = updataScheduleRequest.getData().getMembers();
-                int memberRow = 0;
-                for (UpdataScheduleRequest.Member member : members){
-                    memberRow = sMembersMapper.updateSMembers(member.getNewuid(), member.getNewname(),scheduleId,member.getOlduid());
-                }
-                return memberRow > 0 ? StatusRespond.ok() : StatusRespond.fail();
-            }else {
-                return StatusRespond.fail();
-            }
+            String members = data.getMembers();
+            return  scheduleMapper.updateSchedule(content,begintime,endtime,iswarn,straddr,strdescrip,scheduleId,members) > 0 ?
+                    StatusRespond.ok() : StatusRespond.fail();
         }
-
         if (updataScheduleRequest.getAction().equals("cancel")){
             return scheduleMapper.cancelSchedule(updataScheduleRequest.getAction(), scheduleId) > 0 ?
                     StatusRespond.ok() : StatusRespond.fail();
@@ -102,18 +77,18 @@ public class ScheduleServiceImpl implements ScheduleService {
     //1.6 删除日程
     @Override
     public StatusRespond deleteScheduleData(String scheduleId) {
-        return scheduleMapper.deleteByScheduleId(scheduleId) > 0 && sMembersMapper.deleteByScheduleId(scheduleId)>0 ?
+        return scheduleMapper.deleteByScheduleId(scheduleId) > 0 ?
                 StatusRespond.ok() : StatusRespond.fail();
     }
 
     //1.7 获取用户发布的日程列表
     @Override
-    public ScheduleListRespond getScheduleDataList(String uid) {
+    public ScheduleListRespond getScheduleDataList(String uid,String begintime) {
         if (uid.isEmpty()){
             return ScheduleListRespond.fail();
         }
-        return scheduleMapper.getScheduleById(uid) != null ?
-                ScheduleListRespond.ok(scheduleMapper.getScheduleById(uid)) : ScheduleListRespond.dataNull();
+        return scheduleMapper.getScheduleById(uid, Long.valueOf(begintime)) != null ?
+                ScheduleListRespond.ok(scheduleMapper.getScheduleById(uid, Long.valueOf(begintime))) : ScheduleListRespond.dataNull();
     }
 
 }

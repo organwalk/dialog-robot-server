@@ -2,7 +2,6 @@ package com.content.contentprocess.mapper.mysql;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.content.contentprocess.entity.table.NMembersTable;
-import com.content.contentprocess.entity.table.SMembersTable;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;

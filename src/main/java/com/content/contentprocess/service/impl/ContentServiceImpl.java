@@ -22,8 +22,8 @@ public class ContentServiceImpl implements ContentService {
 
     //-------------暂时不维护该类所有内容----------------
     private final GetDataListRedis getDataListRedis;
-    private final String[] messagePush ={"测试消息","AppMsg=>应用消息","TxtMsg=>文本消息","PicMsg=>图片消息","LinkMsg链接消息","VocMsg语音消息","MulMsg图文消息","IDMsg名片消息","SysMsg系统消息"};
-    private final String[] deptAndPersonManagement = {"AddMan新增人员","DelMan删除人员","ModMan修改人员","GetManDept获取用户所属部门","GetMan获取用户详细信息","AddDept新增部门","DelDept删除部门"};
+    private final String[] messagePush ={"测试消息","AppMsg","TxtMsg","PicMsg","LinkMsg","VocMsg","MulMsg","IDMsg","SysMsg"};
+    private final String[] deptAndPersonManagement = {"AddMan","DelMan","ModMan","GetManDept","GetMan","AddDept","DelDept"};
     @Override
     public OrderRespond getProcessResultByContent(OrderRequest orderRequest,String mobile) {
         String content = orderRequest.getOrderContent();
@@ -45,7 +45,6 @@ public class ContentServiceImpl implements ContentService {
     public Object dataSecondaryProcess(Object o, String mobile) {
         String json = JSON.toJSONString(o);
         JSONObject jsonObject = JSON.parseObject(json);
-
         //消息推送
         String orderType = (String) jsonObject.get("orderType");
         boolean flag = true;
@@ -82,7 +81,7 @@ public class ContentServiceImpl implements ContentService {
             for (String pm:
                     deptAndPersonManagement) {
                 if(pm.equals(orderType)){
-                    if("AddMan新增人员".equals(orderType)||"DelDept删除部门".equals(orderType)){
+                    if("AddMan".equals(orderType)||"DelDept".equals(orderType)){
                        String deptName = (String) jsonObject.get("dept");
                        List<String> deptInfo = (List<String>) getDataListRedis.getDeptByName(deptName,mobile);
                        String deptId = null;
@@ -90,7 +89,7 @@ public class ContentServiceImpl implements ContentService {
                             deptId = deptInfo.get(0);
                        }
                        jsonObject.put("dept",deptId);
-                    }else if ("DelMan删除人员".equals(orderType)||"GetMan获取用户详细信息".equals(orderType)){
+                    }else if ("DelMan".equals(orderType)||"GetMan".equals(orderType)){
                         String deptName = (String) jsonObject.get("dept");
                         List<String> deptInfo = (List<String>) getDataListRedis.getDeptByName(deptName,mobile);
                         String deptId = null;
@@ -105,9 +104,9 @@ public class ContentServiceImpl implements ContentService {
                             uId = personInfo.get(0);
                         }
                         jsonObject.put("name",uId);
-                    } else if ("ModMan修改人员".equals(orderType)||"AddDept新增部门".equals(orderType)) {
+                    } else if ("ModMan".equals(orderType)||"AddDept".equals(orderType)) {
                         break;
-                    } else if ("GetManDept获取用户所属部门".equals(orderType)) {
+                    } else if ("GetManDept".equals(orderType)) {
                         String personName = (String) jsonObject.get("name");
                         List<String> personInfo = (List<String>) getDataListRedis.getPersonByName(personName,mobile);
                         String uId = null;
