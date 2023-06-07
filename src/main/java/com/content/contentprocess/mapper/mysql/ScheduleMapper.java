@@ -31,8 +31,7 @@ public interface ScheduleMapper extends BaseMapper<ScheduleTable> {
 
     //  根据日程id取消日程
     @Update("<script>" +
-            "UPDA" +
-            "TE schedule SET " +
+            "UPDATE schedule SET " +
             "action = #{action}"+
             "WHERE schedule_id = #{scheduleId}" +
             "</script>")

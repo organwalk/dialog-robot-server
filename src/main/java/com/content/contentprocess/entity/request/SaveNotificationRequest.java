@@ -8,6 +8,7 @@ import java.util.List;
 public class SaveNotificationRequest {
     private String action;
     private Long uid;
+    private String name;
     private Long noticeId;
     private NoticeData data;
 
@@ -15,13 +16,8 @@ public class SaveNotificationRequest {
     public static class NoticeData{
         private String content;
         private Long remindTime;
-        private List<Member> members;
+        private String members;
         private boolean isPushMail;
     }
 
-    @Data
-    public static class Member {
-        private String uid;
-        private String name;
-    }
 }

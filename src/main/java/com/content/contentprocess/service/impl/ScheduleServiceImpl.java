@@ -46,7 +46,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         return scheduleMapper.insert(scheduleTable) > 0 ? StatusRespond.ok() : StatusRespond.fail();
     }
 
-    //1.5 修改 / 取消日程
+    //1.5 修改日程
     @Override
     public StatusRespond updataScheduleData(UpdataScheduleRequest updataScheduleRequest,String scheduleId) {
 
@@ -64,10 +64,6 @@ public class ScheduleServiceImpl implements ScheduleService {
             String strdescrip = data.getStrdescrip();
             String members = data.getMembers();
             return  scheduleMapper.updateSchedule(content,begintime,endtime,iswarn,straddr,strdescrip,scheduleId,members) > 0 ?
-                    StatusRespond.ok() : StatusRespond.fail();
-        }
-        if (updataScheduleRequest.getAction().equals("cancel")){
-            return scheduleMapper.cancelSchedule(updataScheduleRequest.getAction(), scheduleId) > 0 ?
                     StatusRespond.ok() : StatusRespond.fail();
         }else {
             return StatusRespond.fail();

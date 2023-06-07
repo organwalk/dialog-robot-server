@@ -12,15 +12,7 @@ public class UpdataNotificationRequest {
     public static class NoticeData{
         private String content;
         private long remindTime;
-        private List<Member> members;
+        private String members;
         private boolean isPushMail;
-    }
-
-    @Data
-    public static class Member {
-        private String olduid;
-        private String oldname;
-        private String newuid;
-        private String newname;
     }
 }

@@ -5,6 +5,7 @@ import com.content.contentprocess.entity.respond.NotificationListRespond;
 import com.content.contentprocess.entity.respond.ObjectIdArrayRespond;
 import com.content.contentprocess.entity.respond.ScheduleListRespond;
 import com.content.contentprocess.entity.respond.StatusRespond;
+import com.content.contentprocess.mapper.mysql.NotificationMapper;
 import com.content.contentprocess.mapper.mysql.ScheduleMapper;
 import com.content.contentprocess.mapper.redis.GetDataListRedis;
 import com.content.contentprocess.mapper.redis.SaveDataListRedis;
@@ -27,7 +28,9 @@ public class DataController {
     private final SaveDataListRedis saveDataListRedis;
     private final GetDataListRedis getDataListRedis;
     private final ScheduleMapper scheduleMapper;
+    private final NotificationMapper notificationMapper;
 
+    //通过人名数组获得Uid
     @PostMapping("/receivers/{mobile}")
     public ObjectIdArrayRespond getUidByNameList(@PathVariable String mobile,
                                                  @RequestBody ObjectIdRequest objectIdRequest){
@@ -81,9 +84,12 @@ public class DataController {
                 StatusRespond.ok() : StatusRespond.fail();
    }
     @DeleteMapping("/delete/{mobile}")
-    public void deleteScheduleData(@PathVariable String mobile){
+    public void deleteScheduleDataRedis(@PathVariable String mobile){
        getDataListRedis.deleteUserByMobile(mobile);
     }
+
+
+    //  日程
     @PostMapping("/schedule")
     public StatusRespond saveScheduleData(@RequestBody SaveScheduleRequest saveScheduleRequest){
         return scheduleService.saveScheduleData(saveScheduleRequest);
@@ -95,9 +101,13 @@ public class DataController {
         return scheduleService.updataScheduleData(updataScheduleRequest,scheduleId);
     }
 
+    @PutMapping("/schedule/cancel/{scheduleId}")
+    public StatusRespond cancelScheduleData(@PathVariable String scheduleId){
+        return scheduleMapper.cancelSchedule("cancel",scheduleId) > 0 ? StatusRespond.ok() : StatusRespond.fail();
+    }
+
     @DeleteMapping("/schedule/{scheduleId}")
-    public StatusRespond deleteScheduleData(@PathVariable String scheduleId,
-                                            @RequestBody ActionRequest actionRequest){
+    public StatusRespond deleteScheduleData(@PathVariable String scheduleId){
         return scheduleService.deleteScheduleData(scheduleId);
     }
 
@@ -120,28 +130,44 @@ public class DataController {
         return ScheduleListRespond.ok(scheduleMapper.getScheduleBySid(sid));
     }
 
-    @PostMapping("/notification")
-    public StatusRespond saveNotification(@RequestBody SaveNotificationRequest saveNotificationRequest){
-        return notificationService.saveNotificationData(saveNotificationRequest);
-    }
 
+    //  事项
     @PutMapping("/notification/{noticeId}")
     public StatusRespond updataScheduleData(@PathVariable String noticeId,
                                             @RequestBody UpdataNotificationRequest updataNotificationRequest){
         return notificationService.updataNotificationData(updataNotificationRequest,noticeId);
     }
 
+    @PostMapping("/notification")
+    public StatusRespond saveNotification(@RequestBody SaveNotificationRequest saveNotificationRequest){
+        return notificationService.saveNotificationData(saveNotificationRequest);
+    }
+
+    @PutMapping("/notification/cancel/{noticeId}")
+    public StatusRespond cancelNotification(@PathVariable String noticeId){
+        return notificationMapper.cancelNotification("cancel",noticeId) > 0 ? StatusRespond.ok() : StatusRespond.fail();
+    }
+
     @DeleteMapping("/notification/{noticeId}")
-    public StatusRespond deleteNotificationData(@PathVariable String noticeId,
-                                                @RequestBody ActionRequest actionRequest){
-        System.out.println("noticeId = " + noticeId);
+    public StatusRespond deleteNotificationData(@PathVariable String noticeId){
         return notificationService.deleteNotificationData(noticeId);
     }
 
-    @GetMapping("/notification/{uid}")
+    @PostMapping("/notification/{uid}")
     public NotificationListRespond getNotificationDataList(@PathVariable String uid,
-                                                       @RequestBody ActionRequest actionRequest){
-        return notificationService.getNotificationDataList(uid);
+                                                       @RequestBody GetNotificationRequest getNotificationRequest){
+        return notificationService.getNotificationDataList(uid,getNotificationRequest.getRemind_time());
     }
+
+    @GetMapping("/notification/nid/{nid}")
+    public NotificationListRespond getNotification(@PathVariable String nid){
+        return NotificationListRespond.ok(notificationMapper.getNotificationByNid(nid));
+    }
+
+    @GetMapping("/notification/count/{uid}")
+    public NotificationListRespond getNotificationDataCount(@PathVariable String uid){
+        return NotificationListRespond.ok(notificationMapper.getNotificationCountByDate(uid)) ;
+    }
+
 
 }

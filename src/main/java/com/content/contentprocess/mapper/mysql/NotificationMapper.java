@@ -2,25 +2,27 @@ package com.content.contentprocess.mapper.mysql;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.content.contentprocess.entity.table.NotificationTable;
-import com.content.contentprocess.entity.table.ScheduleTable;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
 @Mapper
 public interface NotificationMapper extends BaseMapper<NotificationTable> {
-    @Update("<script>" +
-            "UPDATE notification SET " +
-            "<if test='content != null'>content = #{content},</if>" +
-            "<if test='remindTime != null'>remind_time = #{remindTime},</if>" +
-            "<if test='is_push_mail != null'>is_push_mail = #{is_push_mail}</if>" +
-            "WHERE notice_id = #{notice_id}" +
-            "</script>")
+
+    //  根据事项ID更新事项
+    @Update("UPDATE notification SET " +
+            "content = #{content}, " +
+            "remind_time = #{remind_time}, " +
+            "is_push_mail = #{is_push_mail}, " +
+            "members = #{members} " +
+            "WHERE notice_id = #{notice_id}")
     int updateNotification(@Param("content")String content,
-                       @Param("remindTime")String remindTime,
+                       @Param("remind_time")String remind_time,
                        @Param("is_push_mail")String is_push_mail,
+                       @Param("members")String members,
                        @Param("notice_id")String notice_id);
 
+    //  根据事项ID取消事项
     @Update("<script>" +
             "UPDATE notification SET " +
             "action = #{action}"+
@@ -29,19 +31,41 @@ public interface NotificationMapper extends BaseMapper<NotificationTable> {
     int cancelNotification(@Param("action")String action,
                        @Param("notice_id")String notice_id);
 
+    //  根据事项ID删除事项
     @Delete("DELETE FROM notification WHERE notice_id = #{notice_id}")
-    int deleteBynoticeId(@Param("notice_id")String notice_id);
+    int deleteByNoticeId(@Param("notice_id")String notice_id);
 
-    @Select("SELECT * from notification where uid = #{uid}")
-    @Results(value = {
+    //  根据用户id获取指定时间事项列表
+    @Select("SELECT * from notification where uid = #{uid} " +
+            "AND DATE(CONVERT_TZ(FROM_UNIXTIME(remind_time / 1000), 'UTC', 'Asia/Shanghai')) = " +
+            "DATE(CONVERT_TZ(FROM_UNIXTIME(#{remind_time} / 1000), 'UTC', 'Asia/Shanghai'));")
+    @Results(id = "selectList",
+            value = {
             @Result(property = "uid",column = "uid"),
             @Result(property = "notice_id",column = "notice_id"),
             @Result(property = "content",column = "content"),
             @Result(property = "remind_time",column = "remind_time"),
             @Result(property = "is_push_mail",column = "is_push_mail"),
-            @Result(property = "action",column = "action"),
-            @Result(property = "members", column = "notice_id",
-                    many = @Many(select = "com.content.contentprocess.mapper.mysql.NMembersMapper.getNMembersByNoticeId"))
+            @Result(property = "members",column = "members"),
+            @Result(property = "action",column = "action")
+
     })
-    List<NotificationTable> getNotificationById(String uid);
+    List<NotificationTable> getNotificationById(@Param("uid")String uid,
+                                                @Param("remind_time")Long remind_time);
+
+    //  获取指定日期日程数量
+    @Select("SELECT DATE(CONVERT_TZ(FROM_UNIXTIME(remind_time / 1000), 'UTC', 'Asia/Shanghai')) AS date, COUNT(*) AS count " +
+            "FROM notification WHERE (JSON_SEARCH(members, 'one', #{uid}, NULL, '$[*].uid') IS NOT NULL OR uid = #{uid}) " +
+            "GROUP BY date")
+    @Results(value = {
+            @Result(property = "date",column = "date"),
+            @Result(property = "count",column = "count")
+    })
+    List<NotificationTable> getNotificationCountByDate(@Param("uid") String uid);
+
+    //  根据事项id获取事项信息
+    @Select("SELECT * FROM notification " +
+            "WHERE notice_id=#{notice_id}")
+    @ResultMap(value = "selectList")
+    List<NotificationTable> getNotificationByNid(@Param("notice_id")String notice_id);
 }

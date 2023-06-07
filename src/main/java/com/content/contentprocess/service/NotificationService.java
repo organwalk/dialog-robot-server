@@ -9,5 +9,5 @@ public interface NotificationService {
     StatusRespond saveNotificationData(SaveNotificationRequest saveNotificationRequest);
     StatusRespond updataNotificationData(UpdataNotificationRequest updataNotificationRequest, String noticeId);
     StatusRespond deleteNotificationData(String noticeId);
-    NotificationListRespond getNotificationDataList(String uid);
+    NotificationListRespond getNotificationDataList(String uid,String gtime);
 }
