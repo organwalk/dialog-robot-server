@@ -31,7 +31,7 @@ public class ContentServiceImpl implements ContentService {
         String content = orderRequest.getOrderContent();
         //向模型传递指令内容
         Object template = dataSecondaryProcess(modelProcess(content),mobile);
-
+        System.out.println(template);
         return template!=null ? OrderRespond.ok(template) : OrderRespond.fail();
     }
 
