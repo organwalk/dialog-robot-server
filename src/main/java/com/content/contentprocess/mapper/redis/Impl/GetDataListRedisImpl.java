@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Component
 @AllArgsConstructor
@@ -15,14 +17,24 @@ public class GetDataListRedisImpl implements GetDataListRedis {
 
     @Override
     public Object getGroupByName(String groupName,String mobile) {
-        String hashKeyName = "group:" + groupName + ":mobile:" + mobile;
-        return redisTemplate.opsForHash().values(hashKeyName);
+        String hashKeyNamePattern = "group:*" + groupName + "*:mobile:" + mobile;
+        Set<String> keys = redisTemplate.keys(hashKeyNamePattern);
+        Object values = new Object();
+        for (String key : keys) {
+            values = redisTemplate.opsForHash().values(key);
+        }
+        return values;
     }
 
     @Override
     public Object getDeptByName(String deptName,String mobile) {
-        String hashKeyName = "dept:" + deptName + ":mobile:" + mobile;
-        return redisTemplate.opsForHash().values(hashKeyName);
+        String hashKeyNamePattern = "dept:*" + deptName + "*:mobile:" + mobile;
+        Set<String> keys = redisTemplate.keys(hashKeyNamePattern);
+        Object values = new Object();
+        for (String key : keys) {
+            values = redisTemplate.opsForHash().values(key);
+        }
+        return values;
     }
 
     @Override
