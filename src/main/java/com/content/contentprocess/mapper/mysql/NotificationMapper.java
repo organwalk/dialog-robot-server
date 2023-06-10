@@ -1,6 +1,7 @@
 package com.content.contentprocess.mapper.mysql;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.content.contentprocess.entity.table.NotificationCountTable;
 import com.content.contentprocess.entity.table.NotificationTable;
 import org.apache.ibatis.annotations.*;
 
@@ -61,7 +62,7 @@ public interface NotificationMapper extends BaseMapper<NotificationTable> {
             @Result(property = "date",column = "date"),
             @Result(property = "count",column = "count")
     })
-    List<NotificationTable> getNotificationCountByDate(@Param("uid") String uid);
+    List<NotificationCountTable> getNotificationCountByDate(@Param("uid") String uid);
 
     //  根据事项id获取事项信息
     @Select("SELECT * FROM notification " +
