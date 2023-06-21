@@ -1,12 +1,15 @@
 package com.content.contentprocess.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.content.contentprocess.entity.request.OrderRequest;
 import com.content.contentprocess.entity.respond.OrderRespond;
 import com.content.contentprocess.mapper.redis.GetDataListRedis;
 import com.content.contentprocess.service.ContentService;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.PumpStreamHandler;
@@ -22,15 +25,58 @@ import java.util.stream.Collectors;
 
 public class ContentServiceImpl implements ContentService {
     private final GetDataListRedis getDataListRedis;
+
     @Override
     public OrderRespond getProcessResultByContent(OrderRequest orderRequest,String mobile) {
         //  提取请求中的指令
         String content = orderRequest.getOrderContent();
-        //向模型传递指令内容，并获取参数模板
-        Object template = dataSecondaryProcess(modelProcess(content),mobile);
-        return template!=null ? OrderRespond.ok(template) : OrderRespond.fail();
+        try {
+            JSONObject jsonObject = JSON.parseObject(content);
+            if (jsonObject.get("voiceUrl") != null) {
+                return OrderRespond.ok(Voice.set(jsonObject));
+            }
+            else if (jsonObject.get("imageUrl") != null){
+                return OrderRespond.ok(Image.set(jsonObject.getString("imageUrl")));
+            }
+        }catch (JSONException e) {
+            // 说明content不是JSON格式,进入普通字符串处理逻辑
+            //向模型传递指令内容，并获取参数模板
+            Object template = dataSecondaryProcess(modelProcess(content),mobile);
+            return template!=null ? OrderRespond.ok(template) : OrderRespond.fail();
+        }
+        return null;
     }
 
+    //当前端传来图片资源时使用该内部类
+    @Data
+    @Builder
+    static class Image {
+        private String orderType;
+        private ArrayList object;
+        private String image;
+
+        static Image set(String image){
+            return Image.builder()
+                    .orderType("PicMsg")
+                    .image(image)
+                    .build();
+        }
+    }
+
+    // 当前端传来一段语音时使用该内部类
+    @Data
+    @Builder
+    static class Voice {
+        private String orderType;
+        private ArrayList object;
+        private Object voiceUrl;
+        static Voice set(Object voiceObj){
+            return Voice.builder()
+                    .orderType("VocMsg")
+                    .voiceUrl(voiceObj)
+                    .build();
+        }
+    }
 
     //  定义语言处理模型方法
     public String modelProcess(String content){
@@ -172,4 +218,5 @@ public class ContentServiceImpl implements ContentService {
         }
         return "";
     }
+
 }
