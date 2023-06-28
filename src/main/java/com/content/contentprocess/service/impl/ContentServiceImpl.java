@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 public class ContentServiceImpl implements ContentService {
     private final GetDataListRedis getDataListRedis;
+    //
 
     @Override
     public OrderRespond getProcessResultByContent(OrderRequest orderRequest,String mobile) {
