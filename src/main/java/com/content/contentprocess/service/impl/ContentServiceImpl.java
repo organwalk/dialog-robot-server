@@ -16,6 +16,7 @@ import org.apache.commons.exec.PumpStreamHandler;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -184,8 +185,8 @@ public class ContentServiceImpl implements ContentService {
     public String groupIdProcess(JSONObject jsonObject,String mobile){
         List<String> obj = (List) jsonObject.get("object");
         for (String dept : obj){
-            List<Object> checkGid = (List<Object>) getDataListRedis.getGroupByName(dept,mobile);
-            if (!checkGid.isEmpty()){
+            Field[] fields =  getDataListRedis.getGroupByName(dept,mobile).getClass().getDeclaredFields();
+            if ( fields.length != 0 ){
                 List<Object> tempList = obj.stream()
                         .map(d -> (List<Object>) getDataListRedis.getGroupByName(d,mobile))
                         .map(list -> list.get(1))
