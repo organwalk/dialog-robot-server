@@ -70,7 +70,7 @@ public class SaveDataListRedisImpl implements SaveDataListRedis {
     public boolean saveUserInfo(UserRequest userRequest) {
         String hashKeyName = "user:mobile:"+userRequest.getMobile();
         redisTemplate.opsForHash().put(hashKeyName,"id",userRequest.getUid());
-        redisTemplate.opsForHash().put(hashKeyName,"name",userRequest.getMobile());
+        redisTemplate.opsForHash().put(hashKeyName,"name",userRequest.getName());
         redisTemplate.opsForHash().put(hashKeyName,"dept",userRequest.getDeptName());
         redisTemplate.opsForHash().put("mobile:"+userRequest.getMobile(),"personHash",hashKeyName);
         return redisTemplate.getExpire(hashKeyName) != null ? true : false;

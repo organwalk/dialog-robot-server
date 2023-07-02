@@ -324,7 +324,7 @@ if xeno_status == 200:
         else:
             xeno_output = {
                 "orderType": "NameQueryPlan",
-                "nameQueryPlanNone": True
+                "nameQueryPlanNone": "true"
             }
 
     elif xeno_intent == "content_query_plan":
@@ -340,7 +340,7 @@ if xeno_status == 200:
         else:
             xeno_output = {
                 "orderType": "ContentQueryPlan",
-                "contentQueryPlanNone": True
+                "contentQueryPlanNone": "true"
             }
 
     elif xeno_intent == "fast_add_notes":
@@ -367,7 +367,7 @@ if xeno_status == 200:
         if xeno_output['timeDetected'] == [] and xeno_output['noteObject'] == [] and xeno_output['noteContent'] == '':
             xeno_output = {
                 "orderType": "FastAddNotes",
-                "fastAddNotesNone": True
+                "fastAddNotesNone": "true"
             }
 
     elif xeno_intent == "query_done":

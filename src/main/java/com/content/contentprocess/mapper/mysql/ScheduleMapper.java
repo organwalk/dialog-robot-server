@@ -47,7 +47,7 @@ public interface ScheduleMapper extends BaseMapper<ScheduleTable> {
             "WHERE (JSON_SEARCH(members, 'one', #{uid}, NULL, '$[*].uid') IS NOT NULL " +
             "OR uid=#{uid}) " +
             "AND DATE(CONVERT_TZ(FROM_UNIXTIME(begintime / 1000), 'UTC', 'Asia/Shanghai')) = " +
-            "DATE(CONVERT_TZ(FROM_UNIXTIME(#{gtime} / 1000), 'UTC', 'Asia/Shanghai'));")
+            "DATE(CONVERT_TZ(FROM_UNIXTIME(#{g_time} / 1000), 'UTC', 'Asia/Shanghai'));")
     @Results(id = "selectList",
             value = {
             @Result(property = "uid",column = "uid"),
@@ -62,7 +62,7 @@ public interface ScheduleMapper extends BaseMapper<ScheduleTable> {
             @Result(property = "members",column = "members")
     })
     List<ScheduleTable> getScheduleById(@Param("uid")String uid,
-                                        @Param("gtime")Long gtime);
+                                        @Param("g_time")Long gTime);
 
     //  获取指定日期日程数量
     @Select("SELECT DATE(CONVERT_TZ(FROM_UNIXTIME(begintime / 1000), 'UTC', 'Asia/Shanghai')) AS date, COUNT(*) AS count " +
@@ -87,5 +87,32 @@ public interface ScheduleMapper extends BaseMapper<ScheduleTable> {
             "WHERE schedule_id=#{schedule_id}")
     @ResultMap(value = "selectList")
     List<ScheduleTable> getScheduleBySid(@Param("schedule_id")String schedule_id);
+
+    // 根据宽泛时间查询日程
+    @Select("SELECT * FROM schedule " +
+            "WHERE begintime >= UNIX_TIMESTAMP(CONVERT_TZ(#{beginTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
+            "AND endtime <= UNIX_TIMESTAMP(CONVERT_TZ(#{endTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
+            "AND JSON_CONTAINS(JSON_EXTRACT(members, '$'), #{memberJson})")
+    @ResultMap(value = "selectList")
+    List<ScheduleTable> findByTimeAndMember(@Param("beginTime") String beginTime,
+                                            @Param("endTime") String endTime,
+                                            @Param("memberJson") String memberJson);
+    // 根据创建者及参与者查询日程
+    @Select("SELECT * FROM schedule " +
+            "WHERE name = #{name} " +
+            "AND JSON_CONTAINS(JSON_EXTRACT(members, '$'), #{memberJson})")
+    @ResultMap(value = "selectList")
+    List<ScheduleTable> findByNameAndMember(@Param("name") String name,@Param("memberJson") String memberJson);
+
+    @Select("SELECT * FROM schedule " +
+            "WHERE (content like CONCAT('%', #{content}, '%') or strdescrip LIKE CONCAT('%', #{content}, '%')) " +
+            "AND begintime >= UNIX_TIMESTAMP(CONVERT_TZ(#{beginTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
+            "AND endtime <= UNIX_TIMESTAMP(CONVERT_TZ(#{endTime}, 'Asia/Shanghai', 'UTC')) * 1000")
+    @ResultMap(value = "selectList")
+    List<ScheduleTable> findByVagueContent(@Param("content") String content,
+                                           @Param("beginTime") String beginTime,
+                                           @Param("endTime") String endTime);
+
+
 
 }

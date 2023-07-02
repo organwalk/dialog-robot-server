@@ -69,4 +69,12 @@ public interface NotificationMapper extends BaseMapper<NotificationTable> {
             "WHERE notice_id=#{notice_id}")
     @ResultMap(value = "selectList")
     List<NotificationTable> getNotificationByNid(@Param("notice_id")String notice_id);
+
+    @Select("SELECT * FROM notification where action=#{action} AND JSON_CONTAINS(JSON_EXTRACT(members, '$'), #{memberJson})  " +
+            "AND remind_time >= UNIX_TIMESTAMP(CONVERT_TZ(#{begintime}, 'Asia/Shanghai', 'UTC')) * 1000 "+
+            "AND remind_time <= UNIX_TIMESTAMP(CONVERT_TZ(#{endtime}, 'Asia/Shanghai', 'UTC')) * 1000")
+    @ResultMap(value = "selectList")
+    List<NotificationTable> findByMemberActionAndTime(@Param("action") String action, @Param("memberJson") String memberJson,
+                                                      @Param("begintime") String begintime, @Param("endtime") String endtime);
+
 }
