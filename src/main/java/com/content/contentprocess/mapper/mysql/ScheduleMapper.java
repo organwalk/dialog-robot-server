@@ -100,9 +100,14 @@ public interface ScheduleMapper extends BaseMapper<ScheduleTable> {
     // 根据创建者及参与者查询日程
     @Select("SELECT * FROM schedule " +
             "WHERE name = #{name} " +
-            "AND JSON_CONTAINS(JSON_EXTRACT(members, '$'), #{memberJson})")
+            "AND JSON_CONTAINS(JSON_EXTRACT(members, '$'), #{memberJson})" +
+            "AND begintime >= UNIX_TIMESTAMP(CONVERT_TZ(#{beginTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
+            "AND endtime <= UNIX_TIMESTAMP(CONVERT_TZ(#{endTime}, 'Asia/Shanghai', 'UTC')) * 1000")
     @ResultMap(value = "selectList")
-    List<ScheduleTable> findByNameAndMember(@Param("name") String name,@Param("memberJson") String memberJson);
+    List<ScheduleTable> findByNameAndMember(@Param("name") String name,
+                                            @Param("memberJson") String memberJson,
+                                            @Param("beginTime") String beginTime,
+                                            @Param("endTime") String endTime);
 
     @Select("SELECT * FROM schedule " +
             "WHERE (content like CONCAT('%', #{content}, '%') or strdescrip LIKE CONCAT('%', #{content}, '%')) " +

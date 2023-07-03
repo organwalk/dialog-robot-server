@@ -9,8 +9,10 @@ import com.content.contentprocess.mapper.mysql.NotificationMapper;
 import com.content.contentprocess.mapper.mysql.ScheduleMapper;
 import com.content.contentprocess.mapper.redis.GetDataListRedis;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 import java.lang.reflect.Field;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -77,50 +79,51 @@ public class ContentProcess {
         }
 
         if (jsonObject.get("orderType").equals("NameQueryPlan") && jsonObject.containsKey("planName")){
-            List<ScheduleTable> data = scheduleMapper.findByNameAndMember(String.valueOf(jsonObject.get("planName")),nameJson(mobile));
+            List<ScheduleTable> data = scheduleMapper.findByNameAndMember(String.valueOf(jsonObject.get("planName")),nameJson(mobile),strStart(), strEnd());
             jsonObject.put("nameQueryPlanData",scheduleProcessToHTML(data));
             jsonObject.remove("planName");
         }
 
         if (jsonObject.get("orderType").equals("ContentQueryPlan") && jsonObject.containsKey("planContent")){
             List<ScheduleTable> data = scheduleMapper.findByVagueContent(String.valueOf(jsonObject.get("planContent")), strStart(), strEnd());
-            jsonObject.put("contentQueryPlan",scheduleProcessToHTML(data));
+            jsonObject.put("contentQueryPlanData",scheduleProcessToHTML(data));
             jsonObject.remove("planContent");
+        }
+
+        if (jsonObject.get("orderType").equals("FastAddNotes")){
+            jsonObject.put("remindTime",getRemindTime(jsonObject));
+            jsonObject.put("content",jsonObject.get("noteContent"));
+            jsonObject.put("members",getMembers(jsonObject,mobile));
+            jsonObject.put("isPushMail",true);
+            jsonObject.remove("timeDetected");
+            jsonObject.remove("noteObject");
+            jsonObject.remove("noteContent");
         }
 
         if (jsonObject.get("orderType").equals("FastQueryNotes")){
             if (jsonObject.get("notestatus").equals("undone")){
                 List<NotificationTable> data = notificationMapper.findByMemberActionAndTime("save",nameJson(mobile),strStart(),strEnd());
-                jsonObject.put("fastQueryNotes",notificationProcessToHTML(data));
+                jsonObject.put("fastQueryNotesData",notificationProcessToHTML(data));
                 jsonObject.remove("notestatus");
             }
             else if (jsonObject.get("notestatus").equals("done")){
                 List<NotificationTable> data = notificationMapper.findByMemberActionAndTime("cancel",nameJson(mobile),strStart(),strEnd());
-                jsonObject.put("fastQueryNotes",notificationProcessToHTML(data));
+                jsonObject.put("fastQueryNotesData",notificationProcessToHTML(data));
                 jsonObject.remove("notestatus");
             }
         }
 
-
         return jsonObject;
     }
 
+
+
+
+    // --------- 内部工具方法 -------------
+
     //  处理receivers字段的工具方法
     private List<Object> receiversProcess(JSONObject jsonObject, String mobile){
-        List<Object> uid = new ArrayList<>();
-        List<String> obj = (List) jsonObject.get("object");
-        for (String name : obj){
-            List<Object> checkUid = (List<Object>) getDataListRedis.getPersonByName(name,mobile);
-            if (!checkUid.isEmpty()){
-                List<Object> tempList = obj.stream()
-                        .map(n -> (List<Object>) getDataListRedis.getPersonByName(n,mobile))
-                        .map(list -> list.get(0))
-                        .collect(Collectors.toList());
-                uid.addAll(tempList);
-                return uid;
-            }
-        }
-        return new ArrayList<>();
+        return getUid((List) jsonObject.get("object"),mobile);
     }
 
     //  处理groupId字段的工具方法
@@ -170,7 +173,7 @@ public class ContentProcess {
     private List<String> scheduleProcessToHTML(List<ScheduleTable> data){
         List<String> result = new ArrayList<>();
         for(ScheduleTable schedule : data) {
-            String planHTML = String.format("<li><strong>%s</strong>&nbsp至&nbsp<strong>%s</strong>，此日程关于:&nbsp<strong>%s</strong>，地点位于:&nbsp<strong>%s</strong></li>",
+            String planHTML = String.format("<li><strong>%s</strong>&nbsp至&nbsp<strong>%s</strong>&nbsp&nbsp&nbsp<br/>此日程关于:&nbsp<strong>%s</strong><br/>地点:&nbsp<strong>%s</strong></li><br/>",
                     formatDate(schedule.getBegintime()),
                     formatDate(schedule.getEndtime()),
                     schedule.getContent(),
@@ -184,8 +187,9 @@ public class ContentProcess {
     private List<String> notificationProcessToHTML(List<NotificationTable> data){
         List<String> result = new ArrayList<>();
         for(NotificationTable notification : data) {
-            String noteHTML = String.format("<li>通知时间:&nbsp<strong>%s</strong>，此事项关于:&nbsp<strong>%s</strong></li>",
+            String noteHTML = String.format("<li>通知时间:&nbsp<strong>%s</strong><br/>发起人:&nbsp<strong>%s</strong><br/>此事项关于:&nbsp<strong>%s</strong></li><br/>",
                     formatDate(notification.getRemind_time()),
+                    notification.getName(),
                     notification.getContent());
             result.add(noteHTML);
         }
@@ -204,6 +208,58 @@ public class ContentProcess {
         } catch(JSONException e) {
             return "";
         }
+    }
+
+    @SneakyThrows
+    private String getRemindTime(JSONObject jsonObject){
+        List<String> timeList = (List<String>) jsonObject.get("timeDetected");
+        if (timeList.isEmpty()){
+            return "";
+        }
+        String time = timeList.get(0);
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date = dateFormat.parse(time);
+        return String.valueOf(date.getTime());
+    }
+
+    private List<Map<String, Object>> getMembers(JSONObject jsonObject, String mobile) {
+        List<String> names = (List<String>) jsonObject.get("noteObject");
+        List<Map<String, Object>> members = new ArrayList<>();
+        for (String name : names) {
+            List<Object> checkUid = (List<Object>) getDataListRedis.getPersonByName(name, mobile);
+            if (!checkUid.isEmpty()) {
+                List<Map<String, Object>> tempList = names.stream()
+                        .map(n -> {
+                            Map<String, Object> map = new HashMap<>();
+                            map.put("name", n);
+                            List<Object> uidList = (List<Object>) getDataListRedis.getPersonByName(n, mobile);
+                            if (!uidList.isEmpty()) {
+                                map.put("uid", uidList.get(0));
+                            }
+                            return map;
+                        })
+                        .collect(Collectors.toList());
+                members.addAll(tempList);
+                return members;
+            }
+        }
+        return new ArrayList<>();
+    }
+
+    private List<Object> getUid(List<String> obj,String mobile){
+        List<Object> uid = new ArrayList<>();
+        for (String name : obj){
+            List<Object> checkUid = (List<Object>) getDataListRedis.getPersonByName(name,mobile);
+            if (!checkUid.isEmpty()){
+                List<Object> tempList = obj.stream()
+                        .map(n -> (List<Object>) getDataListRedis.getPersonByName(n,mobile))
+                        .map(list -> list.get(0))
+                        .collect(Collectors.toList());
+                uid.addAll(tempList);
+                return uid;
+            }
+        }
+        return new ArrayList<>();
     }
 
     private String strStart(){
