@@ -63,6 +63,4 @@ public class ContentServiceImpl implements ContentService {
         System.out.println(JSON.parseObject(template));
         return content.jsonProcess(JSON.parseObject(template),mobile);
     }
-
-
 }
