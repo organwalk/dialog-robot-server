@@ -269,12 +269,15 @@ public class ContentProcess {
     private String getRemindTime(JSONObject jsonObject){
         List<String> timeList = (List<String>) jsonObject.get("timeDetected");
         if (timeList.isEmpty()){
-            return "";
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date date = dateFormat.parse(getStrNow());
+            return String.valueOf(date.getTime());
+        }else {
+            String time = timeList.get(0);
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date date = dateFormat.parse(time);
+            return String.valueOf(date.getTime());
         }
-        String time = timeList.get(0);
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date date = dateFormat.parse(time);
-        return String.valueOf(date.getTime());
     }
 
     private List<Map<String, Object>> getMembers(JSONObject jsonObject, String mobile) {
@@ -315,6 +318,10 @@ public class ContentProcess {
             }
         }
         return new ArrayList<>();
+    }
+
+    private String getStrNow(){
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 
     private String strStart(){
