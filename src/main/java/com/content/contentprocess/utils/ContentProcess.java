@@ -79,13 +79,15 @@ public class ContentProcess {
         }
 
         if (jsonObject.get("orderType").equals("NameQueryPlan") && jsonObject.containsKey("planName")){
-            List<ScheduleTable> data = scheduleMapper.findByNameAndMember(String.valueOf(jsonObject.get("planName")),nameJson(mobile),strStart(), strEnd());
+            List<String> time = (List<String>) jsonObject.get("timeDetected");
+            List<ScheduleTable> data = scheduleMapper.findByNameAndMember(String.valueOf(jsonObject.get("planName")),nameJson(mobile),time.get(0), time.get(1));
             jsonObject.put("nameQueryPlanData",scheduleProcessToHTML(data));
             jsonObject.remove("planName");
         }
 
         if (jsonObject.get("orderType").equals("ContentQueryPlan") && jsonObject.containsKey("planContent")){
-            List<ScheduleTable> data = scheduleMapper.findByVagueContent(String.valueOf(jsonObject.get("planContent")), strStart(), strEnd());
+            List<String> time = (List<String>) jsonObject.get("timeDetected");
+            List<ScheduleTable> data = scheduleMapper.findByVagueContent(String.valueOf(jsonObject.get("planContent")), time.get(0), time.get(1));
             jsonObject.put("contentQueryPlanData",scheduleProcessToHTML(data));
             jsonObject.remove("planContent");
         }
@@ -101,15 +103,53 @@ public class ContentProcess {
         }
 
         if (jsonObject.get("orderType").equals("FastQueryNotes")){
+            List<String> time = (List<String>) jsonObject.get("timeDetected");
             if (jsonObject.get("notestatus").equals("undone")){
-                List<NotificationTable> data = notificationMapper.findByMemberActionAndTime("save",nameJson(mobile),strStart(),strEnd());
-                jsonObject.put("fastQueryNotesData",notificationProcessToHTML(data));
-                jsonObject.remove("notestatus");
+                List<NotificationTable> data;
+                if (time.isEmpty()){
+                    data = notificationMapper.findByMemberActionAndTime("save",nameJson(mobile),strStart(),strEnd());
+                }else {
+                    data = notificationMapper.findByMemberActionAndTime("save",nameJson(mobile),time.get(0),time.get(1));
+                }
+                jsonObject.put("fastQueryNotesData",notificationProcessToHTML(data,"normal"));
             }
             else if (jsonObject.get("notestatus").equals("done")){
-                List<NotificationTable> data = notificationMapper.findByMemberActionAndTime("cancel",nameJson(mobile),strStart(),strEnd());
-                jsonObject.put("fastQueryNotesData",notificationProcessToHTML(data));
+                List<NotificationTable> data;
+                if (time.isEmpty()){
+                    data = notificationMapper.findByMemberActionAndTime("cancel",nameJson(mobile),strStart(),strEnd());
+                }else {
+                    data = notificationMapper.findByMemberActionAndTime("cancel",nameJson(mobile),time.get(0),time.get(1));
+                }
+                jsonObject.put("fastQueryNotesData",notificationProcessToHTML(data,"normal"));
+            }
+            jsonObject.remove("notestatus");
+            jsonObject.remove("timeDetected");
+        }
+        if (jsonObject.get("orderType").equals("FastContentQueryNotes")){
+            if (jsonObject.get("notestatus").equals("ask")){
+                List<String> time = (List<String>) jsonObject.get("timeDetected");
+                List<NotificationTable> data;
+                if (time.isEmpty()){
+                    data = notificationMapper.findByVagueContent(String.valueOf(jsonObject.get("planContent")),nameJson(mobile),strStart(),strEnd());
+                }else {
+                    data = notificationMapper.findByVagueContent(String.valueOf(jsonObject.get("planContent")),nameJson(mobile),time.get(0),time.get(1));
+                }
+                if (data.size() == 1){
+                    for (NotificationTable notification : data){
+                        jsonObject.put("noteContentStatus",notification.getAction());
+                        jsonObject.put("fastContentQueryNotesData",notificationProcessToHTML(data,"normal"));
+                    }
+                }else{
+                    List<String> statusList = new ArrayList<>();
+                    for (NotificationTable notification : data){
+                        String status = notification.getAction();
+                        statusList.add(status);
+                    }
+                    jsonObject.put("noteContentStatus",statusList);
+                    jsonObject.put("fastContentQueryNotesData",notificationProcessToHTML(data,"status"));
+                }
                 jsonObject.remove("notestatus");
+                jsonObject.remove("timeDetected");
             }
         }
 
@@ -184,13 +224,28 @@ public class ContentProcess {
     }
 
     // 将事项List内容渲染为HTML代码
-    private List<String> notificationProcessToHTML(List<NotificationTable> data){
+    private List<String> notificationProcessToHTML(List<NotificationTable> data, String type){
         List<String> result = new ArrayList<>();
         for(NotificationTable notification : data) {
-            String noteHTML = String.format("<li>通知时间:&nbsp<strong>%s</strong><br/>发起人:&nbsp<strong>%s</strong><br/>此事项关于:&nbsp<strong>%s</strong></li><br/>",
-                    formatDate(notification.getRemind_time()),
-                    notification.getName(),
-                    notification.getContent());
+            String noteHTML = "";
+            if (type == "normal"){
+                noteHTML = String.format("<li>通知时间:&nbsp<strong>%s</strong><br/>发起人:&nbsp<strong>%s</strong><br/>此事项关于:&nbsp<strong>%s</strong></li><br/>",
+                        formatDate(notification.getRemind_time()),
+                        notification.getName(),
+                        notification.getContent());
+            }else if (type == "status"){
+                String strStatus;
+                if (notification.getAction().equals("save")){
+                    strStatus = "未完成";
+                }else {
+                    strStatus = "已完成";
+                }
+                noteHTML = String.format("<li>通知时间:&nbsp<strong>%s</strong><br/>状态:&nbsp<strong>%s</strong><br/>发起人:&nbsp<strong>%s</strong><br/>此事项关于:&nbsp<strong>%s</strong></li><br/>",
+                        formatDate(notification.getRemind_time()),
+                        strStatus,
+                        notification.getName(),
+                        notification.getContent());
+            }
             result.add(noteHTML);
         }
         return result;
@@ -263,10 +318,12 @@ public class ContentProcess {
     }
 
     private String strStart(){
-        return LocalDateTime.of(LocalDate.now(), LocalTime.MIN).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        return LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 
     private String strEnd(){
-        return LocalDateTime.of(LocalDate.now(), LocalTime.MAX).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        LocalDateTime endOfDay = LocalDateTime.of(tomorrow, LocalTime.MIDNIGHT).minusSeconds(1);
+        return endOfDay.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 }

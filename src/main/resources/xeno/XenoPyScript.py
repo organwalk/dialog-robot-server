@@ -9,7 +9,6 @@ import io
 with contextlib.redirect_stdout(io.StringIO()):
     import jionlp as xeno_jio
 
-
 xeno_input = sys.argv[1]  # 从脚本获取原文
 
 xeno_response, xeno_status = xeno_nlper(xeno_input)  # 获取语言理解结果及状态码
@@ -307,7 +306,8 @@ if xeno_status == 200:
             }
         else:
             xeno_output = {
-                "orderType": "TimeQueryPlan"
+                "orderType": "TimeQueryPlan",
+                "timeQueryPlanNone": True
             }
 
     elif xeno_intent == "name_query_plan":
@@ -319,28 +319,39 @@ if xeno_status == 200:
         if name_plan_maker:
             xeno_output = {
                 "orderType": "NameQueryPlan",
-                "planName": name_plan_maker
+                "planName": name_plan_maker,
+                'timeDetected': []
             }
+            try:
+                xeno_output['timeDetected'] = xeno_jio.parse_time(xeno_text)['time']
+            except ValueError:
+                """"""
         else:
             xeno_output = {
                 "orderType": "NameQueryPlan",
-                "nameQueryPlanNone": "true"
+                "nameQueryPlanNone": True
             }
 
     elif xeno_intent == "content_query_plan":
+        xeno_output = {
+            "orderType": "ContentQueryPlan",
+            "planContent": '',
+            "timeDetected": []
+        }
         plan_content = ''
         for xeno_entity in xeno_entities:
             if xeno_entity['entity'] == 'plan-content':
-                plan_content = xeno_entity['value']
-        if plan_content:
+                xeno_output['planContent'] = xeno_entity['value']
+
+        try:
+            xeno_output['timeDetected'] = xeno_jio.parse_time(xeno_text)['time']
+        except ValueError:
+            time_span = None
+
+        if xeno_output['planContent'] == '' and xeno_output['timeDetected'] == []:
             xeno_output = {
                 "orderType": "ContentQueryPlan",
-                "planContent": plan_content
-            }
-        else:
-            xeno_output = {
-                "orderType": "ContentQueryPlan",
-                "contentQueryPlanNone": "true"
+                "contentQueryPlanNone": True
             }
 
     elif xeno_intent == "fast_add_notes":
@@ -367,24 +378,67 @@ if xeno_status == 200:
         if xeno_output['timeDetected'] == [] and xeno_output['noteObject'] == [] and xeno_output['noteContent'] == '':
             xeno_output = {
                 "orderType": "FastAddNotes",
-                "fastAddNotesNone": "true"
+                "fastAddNotesNone": True
             }
 
     elif xeno_intent == "query_done":
         xeno_output = {
             "orderType": "FastQueryNotes",
+            "timeDetected": [],
             "notestatus": "done"
         }
+        try:
+            xeno_output['timeDetected'] = xeno_jio.parse_time(xeno_text)['time']
+        except ValueError:
+            time_span = None
 
     elif xeno_intent == "query_undone":
         xeno_output = {
             "orderType": "FastQueryNotes",
+            "timeDetected": [],
             "notestatus": "undone"
         }
+        try:
+            xeno_output['timeDetected'] = xeno_jio.parse_time(xeno_text)['time']
+        except ValueError:
+            time_span = None
+
+    elif xeno_intent == "query_all":
+        xeno_output = {
+            "orderType": "FastQueryNotes",
+            "timeDetected": [],
+            "notestatus": "all"
+        }
+        try:
+            xeno_output['timeDetected'] = xeno_jio.parse_time(xeno_text)['time']
+        except ValueError:
+            time_span = None
+
+    elif xeno_intent == "query_ask":
+        xeno_output = {
+            "orderType": "FastContentQueryNotes",
+            "notestatus": "ask",
+            "timeDetected": [],
+            "planContent": ''
+        }
+        try:
+            xeno_output['timeDetected'] = xeno_jio.parse_time(xeno_text)['time']
+        except ValueError:
+            """"""
+
+        for xeno_entity in xeno_entities:
+            if xeno_entity['entity'] == 'plan-content':
+                xeno_output['planContent'] = xeno_entity['value']
+
+        if xeno_output['timeDetected'] == [] and xeno_output['planContent'] == '':
+            xeno_output = {
+                "orderType": "FastContentQueryNotes",
+                "FastContentQueryNotesNone": True
+            }
 
     else:
         xeno_output = {
             "orderType": ""
         }
 
-    print(xeno_output)
+print(xeno_output)

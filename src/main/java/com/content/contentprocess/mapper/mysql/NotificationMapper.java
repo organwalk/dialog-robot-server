@@ -77,4 +77,11 @@ public interface NotificationMapper extends BaseMapper<NotificationTable> {
     List<NotificationTable> findByMemberActionAndTime(@Param("action") String action, @Param("memberJson") String memberJson,
                                                       @Param("begintime") String begintime, @Param("endtime") String endtime);
 
+    @Select("SELECT * FROM notification where content like CONCAT('%', #{content}, '%') AND JSON_CONTAINS(JSON_EXTRACT(members, '$'), #{memberJson})  " +
+            "AND remind_time >= UNIX_TIMESTAMP(CONVERT_TZ(#{begintime}, 'Asia/Shanghai', 'UTC')) * 1000 "+
+            "AND remind_time <= UNIX_TIMESTAMP(CONVERT_TZ(#{endtime}, 'Asia/Shanghai', 'UTC')) * 1000")
+    @ResultMap(value = "selectList")
+    List<NotificationTable> findByVagueContent(@Param("content") String content, @Param("memberJson") String memberJson,
+                                                      @Param("begintime") String begintime, @Param("endtime") String endtime);
+
 }
