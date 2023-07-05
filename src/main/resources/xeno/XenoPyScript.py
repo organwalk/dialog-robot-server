@@ -9,6 +9,7 @@ import io
 with contextlib.redirect_stdout(io.StringIO()):
     import jionlp as xeno_jio
 
+
 xeno_input = sys.argv[1]  # 从脚本获取原文
 
 xeno_response, xeno_status = xeno_nlper(xeno_input)  # 获取语言理解结果及状态码
@@ -74,8 +75,8 @@ if xeno_status == 200:
         try:
             url_detected = xeno_jio.extract_url(xeno_text)
         except ValueError:
-            url_detected = None
-        if url_detected is not None:
+            url_detected = []
+        if url_detected:
             xeno_output["url"] = url_detected[0]
 
         for xeno_entity in xeno_entities:
@@ -340,7 +341,7 @@ if xeno_status == 200:
         }
         plan_content = ''
         for xeno_entity in xeno_entities:
-            if xeno_entity['entity'] == 'plan-content':
+            if xeno_entity['entity'] == 'about-entity':
                 xeno_output['planContent'] = xeno_entity['value']
 
         try:
@@ -363,10 +364,10 @@ if xeno_status == 200:
         }
 
         for xeno_entity in xeno_entities:
-            if xeno_entity['entity'] == 'note-object':
+            if xeno_entity['entity'] == 'object':
                 xeno_output['noteObject'].append(xeno_entity['value'])
-            elif xeno_entity['entity'] == 'note-content':
-                xeno_output['noteContent'] = xeno_entity['value']
+            elif xeno_entity['entity'] == 'content':
+                xeno_output['noteContent'] += xeno_entity['value']
 
         try:
             time_span = xeno_jio.parse_time(xeno_text)
@@ -427,8 +428,8 @@ if xeno_status == 200:
             """"""
 
         for xeno_entity in xeno_entities:
-            if xeno_entity['entity'] == 'plan-content':
-                xeno_output['planContent'] = xeno_entity['value']
+            if xeno_entity['entity'] == 'about-entity':
+                xeno_output['planContent'] += xeno_entity['value']
 
         if xeno_output['timeDetected'] == [] and xeno_output['planContent'] == '':
             xeno_output = {
@@ -441,4 +442,4 @@ if xeno_status == 200:
             "orderType": ""
         }
 
-print(xeno_output)
+    print(xeno_output)
