@@ -73,21 +73,36 @@ public class ContentProcess {
 
         if (jsonObject.get("orderType").equals("TimeQueryPlan") && jsonObject.containsKey("timeDetected")){
             List<String> time = (List<String>) jsonObject.get("timeDetected");
-            List<ScheduleTable> data = scheduleMapper.findByTimeAndMember(time.get(0),time.get(1), nameJson(mobile));
+            List<ScheduleTable> data;
+            if(time.isEmpty()){
+                data = scheduleMapper.findByTimeAndMember(strStart(),strEnd(), nameJson(mobile));
+            }else {
+                data = scheduleMapper.findByTimeAndMember(time.get(0),time.get(1), nameJson(mobile));
+            }
             jsonObject.put("timeQueryPlanData",scheduleProcessToHTML(data));
             jsonObject.remove("timeDetected");
         }
 
         if (jsonObject.get("orderType").equals("NameQueryPlan") && jsonObject.containsKey("planName")){
             List<String> time = (List<String>) jsonObject.get("timeDetected");
-            List<ScheduleTable> data = scheduleMapper.findByNameAndMember(String.valueOf(jsonObject.get("planName")),nameJson(mobile),time.get(0), time.get(1));
+            List<ScheduleTable> data;
+            if (time.isEmpty()){
+                data = scheduleMapper.findByNameAndMember(String.valueOf(jsonObject.get("planName")),nameJson(mobile),strStart(), strEnd());
+            }else {
+                data = scheduleMapper.findByNameAndMember(String.valueOf(jsonObject.get("planName")),nameJson(mobile),time.get(0), time.get(1));
+            }
             jsonObject.put("nameQueryPlanData",scheduleProcessToHTML(data));
             jsonObject.remove("planName");
         }
 
         if (jsonObject.get("orderType").equals("ContentQueryPlan") && jsonObject.containsKey("planContent")){
             List<String> time = (List<String>) jsonObject.get("timeDetected");
-            List<ScheduleTable> data = scheduleMapper.findByVagueContent(String.valueOf(jsonObject.get("planContent")), time.get(0), time.get(1));
+            List<ScheduleTable> data;
+            if (time.isEmpty()){
+                data = scheduleMapper.findByVagueContent(String.valueOf(jsonObject.get("planContent")), strStart(), strEnd());
+            }else {
+                data = scheduleMapper.findByVagueContent(String.valueOf(jsonObject.get("planContent")), time.get(0), time.get(1));
+            }
             jsonObject.put("contentQueryPlanData",scheduleProcessToHTML(data));
             jsonObject.remove("planContent");
         }
