@@ -136,6 +136,14 @@ public class ContentProcess {
                     data = notificationMapper.findByMemberActionAndTime("cancel",nameJson(mobile),time.get(0),time.get(1));
                 }
                 jsonObject.put("fastQueryNotesData",notificationProcessToHTML(data,"normal"));
+            }else if (jsonObject.get("notestatus").equals("all")){
+                List<NotificationTable> data;
+                if (time.isEmpty()){
+                    data = notificationMapper.findByMemberActionAndTime("save",nameJson(mobile),strStart(),strEnd());
+                }else {
+                    data = notificationMapper.findByMemberActionAndTime("save",nameJson(mobile),time.get(0),time.get(1));
+                }
+                jsonObject.put("fastQueryNotesData",notificationProcessToHTML(data,"normal"));
             }
             jsonObject.remove("notestatus");
             jsonObject.remove("timeDetected");
