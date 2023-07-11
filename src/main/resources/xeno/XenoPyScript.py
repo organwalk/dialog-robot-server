@@ -1,4 +1,4 @@
-from XenoNLPRequest import xeno_nlper
+from XenoNLPRequest import xeno_nlper, install_package
 
 import os
 import sys
@@ -7,7 +7,10 @@ import contextlib
 import io
 
 with contextlib.redirect_stdout(io.StringIO()):
-    import jionlp as xeno_jio
+    try:
+        import jionlp as xeno_jio
+    except ModuleNotFoundError:
+        install_package("jionlp")  # 安装 jionlp 包
 
 
 xeno_input = sys.argv[1]  # 从脚本获取原文
@@ -31,9 +34,14 @@ if xeno_status == 200:
             "content": "",
             "object": []
         }
+        isDept = False
         for xeno_entity in xeno_entities:
-            if xeno_entity["entity"] == "object":
-                xeno_output["object"].append(xeno_entity["value"])
+            if xeno_entity["entity"] == "dept":
+                isDept = True
+                xeno_output["object"] = [xeno_entity["value"]]
+            elif xeno_entity["entity"] == "object":
+                if not isDept:
+                    xeno_output["object"].append(xeno_entity["value"])
             elif xeno_entity["entity"] == "title":
                 xeno_output["title"] += xeno_entity["value"]
             elif xeno_entity["entity"] == "content":
@@ -45,9 +53,14 @@ if xeno_status == 200:
             "content": "",
             "object": []
         }
+        isDept = False
         for xeno_entity in xeno_entities:
-            if xeno_entity["entity"] == "object":
-                xeno_output["object"].append(xeno_entity["value"])
+            if xeno_entity["entity"] == "dept":
+                isDept = True
+                xeno_output["object"] = [xeno_entity["value"]]
+            elif xeno_entity["entity"] == "object":
+                if not isDept:
+                    xeno_output["object"].append(xeno_entity["value"])
             elif xeno_entity["entity"] == "content":
                 xeno_output["content"] += xeno_entity["value"]
 
@@ -57,9 +70,14 @@ if xeno_status == 200:
             "image": "",
             "object": []
         }
+        isDept = False
         for xeno_entity in xeno_entities:
-            if xeno_entity["entity"] == "object":
-                xeno_output["object"].append(xeno_entity["value"])
+            if xeno_entity["entity"] == "dept":
+                isDept = True
+                xeno_output["object"] = [xeno_entity["value"]]
+            elif xeno_entity["entity"] == "object":
+                if not isDept:
+                    xeno_output["object"].append(xeno_entity["value"])
             elif xeno_entity["entity"] == "image":
                 xeno_output["image"] += xeno_entity["value"]
 
@@ -79,9 +97,14 @@ if xeno_status == 200:
         if url_detected:
             xeno_output["url"] = url_detected[0]
 
+        isDept = False
         for xeno_entity in xeno_entities:
-            if xeno_entity["entity"] == "object":
-                xeno_output["object"].append(xeno_entity["value"])
+            if xeno_entity["entity"] == "dept":
+                isDept = True
+                xeno_output["object"] = [xeno_entity["value"]]
+            elif xeno_entity["entity"] == "object":
+                if not isDept:
+                    xeno_output["object"].append(xeno_entity["value"])
             elif xeno_entity["entity"] == "title":
                 xeno_output["title"] += xeno_entity["value"]
             elif xeno_entity["entity"] == "content":
@@ -94,9 +117,14 @@ if xeno_status == 200:
             "object": []
         }
 
+        isDept = False
         for xeno_entity in xeno_entities:
-            if xeno_entity["entity"] == "object":
-                xeno_output["object"].append(xeno_entity["value"])
+            if xeno_entity["entity"] == "dept":
+                isDept = True
+                xeno_output["object"] = [xeno_entity["value"]]
+            elif xeno_entity["entity"] == "object":
+                if not isDept:
+                    xeno_output["object"].append(xeno_entity["value"])
 
     elif xeno_intent == "mul_msg":
         xeno_output = {
@@ -108,9 +136,14 @@ if xeno_status == 200:
             "object": []
         }
 
+        isDept = False
         for xeno_entity in xeno_entities:
-            if xeno_entity["entity"] == "object":
-                xeno_output["object"].append(xeno_entity["value"])
+            if xeno_entity["entity"] == "dept":
+                isDept = True
+                xeno_output["object"] = [xeno_entity["value"]]
+            elif xeno_entity["entity"] == "object":
+                if not isDept:
+                    xeno_output["object"].append(xeno_entity["value"])
             elif xeno_entity["entity"] == "url":
                 xeno_output["url"] += xeno_entity["value"]
             elif xeno_entity["entity"] == "title":
@@ -128,9 +161,14 @@ if xeno_status == 200:
             "object": []
         }
 
+        isDept = False
         for xeno_entity in xeno_entities:
-            if xeno_entity["entity"] == "object":
-                xeno_output["object"].append(xeno_entity["value"])
+            if xeno_entity["entity"] == "dept":
+                isDept = True
+                xeno_output["object"] = [xeno_entity["value"]]
+            elif xeno_entity["entity"] == "object":
+                if not isDept:
+                    xeno_output["object"].append(xeno_entity["value"])
             elif xeno_entity["entity"] == "url":
                 xeno_output["url"] += xeno_entity["value"]
             elif xeno_entity["entity"] == "title":
@@ -152,9 +190,14 @@ if xeno_status == 200:
             "object": [],
         }
         PERSON = []
+        isDept = False
         for xeno_entity in xeno_entities:
-            if xeno_entity["entity"] == "object":
-                xeno_output["object"].append(xeno_entity["value"])
+            if xeno_entity["entity"] == "dept":
+                isDept = True
+                xeno_output["object"] = [xeno_entity["value"]]
+            elif xeno_entity["entity"] == "object":
+                if not isDept:
+                    xeno_output["object"].append(xeno_entity["value"])
             elif xeno_entity["entity"] == "desc":
                 xeno_output["desc"].append(xeno_entity["value"])
             elif xeno_entity["entity"] == "title":

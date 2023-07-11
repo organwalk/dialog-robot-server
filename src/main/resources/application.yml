@@ -5,15 +5,15 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://organwalk.ink:3307/interface_data?useSSL=false
+    url: jdbc:mysql://47.122.19.138:33306/interface_data?useSSL=false
     username: root
-    password: 123456
+    password: xenomysql
   data:
     redis:
-      database: 14
-      host: organwalk.ink
-      port: 6379
-      password: 123456
+      database: 1
+      host: 47.122.19.138
+      port: 36379
+      password: xenoredis
       lettuce:
         timeout: 1000
         pool:

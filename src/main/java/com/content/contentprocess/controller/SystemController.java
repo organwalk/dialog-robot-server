@@ -16,4 +16,9 @@ public class SystemController {
     public StatusRespond destroy(@RequestBody ActionRequest actionRequest){
         return systemService.destroyResources(actionRequest);
     }
+
+    @GetMapping("/system/server")
+    public String server(){
+        return "The Xeno-Server is running";
+    }
 }

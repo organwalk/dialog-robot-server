@@ -47,14 +47,15 @@ public class ContentServiceImpl implements ContentService {
     @SneakyThrows
     public String modelProcess(String content){
         CommandLine commandLine = new CommandLine("python");
-        commandLine.addArgument("src/main/resources/xeno/XenoPyScript.py");
+//        commandLine.addArgument("src/main/resources/xeno/XenoPyScript.py");
+        commandLine.addArgument("/root/python/XenoPyScript.py");
         commandLine.addArgument(content);
         DefaultExecutor executor = new DefaultExecutor();
         executor.setWorkingDirectory(new File("."));
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         executor.setStreamHandler(new PumpStreamHandler(stream, stream));
         executor.execute(commandLine);
-        return stream.toString("GBK");
+        return stream.toString("UTF-8");
     }
 
     //  参数模板二次处理，调用redis
