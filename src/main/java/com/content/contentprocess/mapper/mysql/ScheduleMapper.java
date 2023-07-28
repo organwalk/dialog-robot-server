@@ -90,8 +90,10 @@ public interface ScheduleMapper extends BaseMapper<ScheduleTable> {
 
     // 根据宽泛时间查询日程
     @Select("SELECT * FROM schedule " +
-            "WHERE begintime >= UNIX_TIMESTAMP(CONVERT_TZ(#{beginTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
-            "AND endtime <= UNIX_TIMESTAMP(CONVERT_TZ(#{endTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
+            "WHERE begintime <= UNIX_TIMESTAMP(CONVERT_TZ(#{endTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
+            "AND endtime >= UNIX_TIMESTAMP(CONVERT_TZ(#{beginTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
+            "AND (begintime >= UNIX_TIMESTAMP(CONVERT_TZ(#{beginTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
+            "OR endtime <= UNIX_TIMESTAMP(CONVERT_TZ(#{endTime}, 'Asia/Shanghai', 'UTC')) * 1000) " +
             "AND JSON_CONTAINS(JSON_EXTRACT(members, '$'), #{memberJson})")
     @ResultMap(value = "selectList")
     List<ScheduleTable> findByTimeAndMember(@Param("beginTime") String beginTime,
@@ -101,8 +103,10 @@ public interface ScheduleMapper extends BaseMapper<ScheduleTable> {
     @Select("SELECT * FROM schedule " +
             "WHERE name = #{name} " +
             "AND JSON_CONTAINS(JSON_EXTRACT(members, '$'), #{memberJson})" +
-            "AND begintime >= UNIX_TIMESTAMP(CONVERT_TZ(#{beginTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
-            "AND endtime <= UNIX_TIMESTAMP(CONVERT_TZ(#{endTime}, 'Asia/Shanghai', 'UTC')) * 1000")
+            "AND begintime <= UNIX_TIMESTAMP(CONVERT_TZ(#{endTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
+            "AND endtime >= UNIX_TIMESTAMP(CONVERT_TZ(#{beginTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
+            "AND (begintime >= UNIX_TIMESTAMP(CONVERT_TZ(#{beginTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
+            "OR endtime <= UNIX_TIMESTAMP(CONVERT_TZ(#{endTime}, 'Asia/Shanghai', 'UTC')) * 1000)")
     @ResultMap(value = "selectList")
     List<ScheduleTable> findByNameAndMember(@Param("name") String name,
                                             @Param("memberJson") String memberJson,
@@ -111,8 +115,10 @@ public interface ScheduleMapper extends BaseMapper<ScheduleTable> {
 
     @Select("SELECT * FROM schedule " +
             "WHERE (content like CONCAT('%', #{content}, '%') or strdescrip LIKE CONCAT('%', #{content}, '%')) " +
-            "AND begintime >= UNIX_TIMESTAMP(CONVERT_TZ(#{beginTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
-            "AND endtime <= UNIX_TIMESTAMP(CONVERT_TZ(#{endTime}, 'Asia/Shanghai', 'UTC')) * 1000")
+            "AND begintime <= UNIX_TIMESTAMP(CONVERT_TZ(#{endTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
+            "AND endtime >= UNIX_TIMESTAMP(CONVERT_TZ(#{beginTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
+            "AND (begintime >= UNIX_TIMESTAMP(CONVERT_TZ(#{beginTime}, 'Asia/Shanghai', 'UTC')) * 1000 " +
+            "OR endtime <= UNIX_TIMESTAMP(CONVERT_TZ(#{endTime}, 'Asia/Shanghai', 'UTC')) * 1000)")
     @ResultMap(value = "selectList")
     List<ScheduleTable> findByVagueContent(@Param("content") String content,
                                            @Param("beginTime") String beginTime,

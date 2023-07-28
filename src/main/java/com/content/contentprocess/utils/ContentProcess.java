@@ -1,6 +1,7 @@
 package com.content.contentprocess.utils;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.content.contentprocess.entity.table.NotificationTable;
@@ -31,7 +32,8 @@ public class ContentProcess {
     // 参数模板二次处理
     public Object jsonProcess(JSONObject jsonObject, String mobile){
         //  如果该参数模板存在 object 字段的值
-        if (jsonObject.containsKey("object")){
+        if (jsonObject.get("object") != null && !jsonObject.get("object").equals("") &&
+                !(jsonObject.get("object") instanceof JSONArray && ((JSONArray) jsonObject.get("object")).isEmpty())) {
             //  首先判断该字段是否属于人名
             if (!receiversProcess(jsonObject,mobile).isEmpty()){
                 jsonObject.put("receivers",receiversProcess(jsonObject,mobile));
@@ -42,13 +44,26 @@ public class ContentProcess {
                 jsonObject.put("groupId",Long.valueOf(groupIdProcess(jsonObject, mobile)));
                 jsonObject.remove("object");
             }else {
-                //  如果都不属于，则表明区分失败或者当前主体不可寻，应置空object
-                jsonObject.put("object", "");
+                //  如果都不属于，则表明区分失败或者当前主体不可寻
+                jsonObject.put("notfoundKey", jsonObject.getString("object"));
+                jsonObject.put("notfoundObject", "");
+                jsonObject.remove("object");
+            }
+        }else {
+            if (jsonObject.containsKey("object")){
+                jsonObject.put("object","");
             }
         }
 
         if (jsonObject.containsKey("image")) {
             jsonObject.put("image", "");
+        }
+
+        if(jsonObject.containsKey("url")){
+            if (jsonObject.getString("orderType").equals("VocMsg")){
+                jsonObject.put("voiceUrl","");
+                jsonObject.remove("url");
+            }
         }
 
         if (jsonObject.containsKey("dept")) {
@@ -276,6 +291,7 @@ public class ContentProcess {
 
     private static String formatDate(String timestamp) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai")); // 指定时区为中国标准时间
         return sdf.format(new Date(Long.parseLong(timestamp)));
     }
 
