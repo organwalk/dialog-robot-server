@@ -1,11 +1,10 @@
 package com.content.contentprocess.mapper.redis;
 
-import com.content.contentprocess.entity.request.DeptRequest;
-import com.content.contentprocess.entity.request.GroupRequest;
-import com.content.contentprocess.entity.request.UserRequest;
+import com.content.contentprocess.entity.table.IntentionAndEntityResult;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public interface GetDataListRedis {
@@ -14,4 +13,6 @@ public interface GetDataListRedis {
     Object getPersonByName(String username,String mobile);
     Object getUserByMobile(String mobile);
     boolean deleteUserByMobile(String mobile);
+    List<IntentionAndEntityResult> getIntentionAndEntity(String mobile);
+
 }

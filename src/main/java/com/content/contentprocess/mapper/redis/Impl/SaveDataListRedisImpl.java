@@ -25,10 +25,6 @@ public class SaveDataListRedisImpl implements SaveDataListRedis {
             redisTemplate.opsForHash().put(hashKeyName,"groupId",groups.getGroupId());
             redisTemplate.opsForHash().put("mobile:"+mobile,groups.getGroupName(),hashKeyName);
         }
-
-//        Object o = redisTemplate.opsForHash().values(hashKeyName);
-//        List list = (List) o;
-//        System.out.println("o = " + list.get(0));
         return redisTemplate.getExpire(hashKeyName) != null ? true : false;
     }
 
@@ -73,6 +69,15 @@ public class SaveDataListRedisImpl implements SaveDataListRedis {
         redisTemplate.opsForHash().put(hashKeyName,"name",userRequest.getName());
         redisTemplate.opsForHash().put(hashKeyName,"dept",userRequest.getDeptName());
         redisTemplate.opsForHash().put("mobile:"+userRequest.getMobile(),"personHash",hashKeyName);
+        return redisTemplate.getExpire(hashKeyName) != null ? true : false;
+    }
+
+    @Override
+    public boolean saveFeedback(String orderType, String entity, String content, String mobile) {
+        String hashKeyName = "feedback:mobile:"+mobile;
+        redisTemplate.opsForHash().put(hashKeyName,"intention",orderType);
+        redisTemplate.opsForHash().put(hashKeyName,"entity", entity);
+        redisTemplate.opsForHash().put(hashKeyName, "content", content);
         return redisTemplate.getExpire(hashKeyName) != null ? true : false;
     }
 }

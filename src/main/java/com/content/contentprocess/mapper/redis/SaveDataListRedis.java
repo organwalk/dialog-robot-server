@@ -14,4 +14,5 @@ public interface SaveDataListRedis {
     boolean saveDeptInfo(DeptRequest deptRequest,String mobile);
     boolean savePerSonInfo(PersonRequest personRequest,String mobile);
     boolean saveUserInfo(UserRequest personRequest);
+    boolean saveFeedback(String orderType, String entity, String content, String mobile);
 }

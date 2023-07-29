@@ -1,13 +1,13 @@
 package com.content.contentprocess.mapper.redis.Impl;
 
+import com.content.contentprocess.entity.table.IntentionAndEntityResult;
 import com.content.contentprocess.mapper.redis.GetDataListRedis;
 import lombok.AllArgsConstructor;
+import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Component
 @AllArgsConstructor
@@ -63,5 +63,37 @@ public class GetDataListRedisImpl implements GetDataListRedis {
             redisTemplate.delete(hashKeyName);
             return true;
         }
+    }
+
+    @Override
+    public List<IntentionAndEntityResult> getIntentionAndEntity(String mobile) {
+        HashOperations<String, String, String> hashOps = redisTemplate.opsForHash();
+        Map<String, String> map = hashOps.entries("feedback:mobile:" + mobile);
+        List<IntentionAndEntityResult> result = new ArrayList<>();
+        String content = null;
+        String intention = null;
+        String entity = null;
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            switch (key) {
+                case "content":
+                    content = value;
+                    break;
+                case "intention":
+                    intention = value;
+                    break;
+                case "entity":
+                    entity = value;
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (content != null && intention != null && entity != null) {
+            IntentionAndEntityResult feedback = new IntentionAndEntityResult(content, intention, entity);
+            result.add(feedback);
+        }
+        return result;
     }
 }

@@ -7,6 +7,7 @@ import com.content.contentprocess.entity.request.OrderRequest;
 import com.content.contentprocess.entity.resource.Image;
 import com.content.contentprocess.entity.resource.Voice;
 import com.content.contentprocess.entity.respond.OrderRespond;
+import com.content.contentprocess.mapper.redis.SaveDataListRedis;
 import com.content.contentprocess.service.ContentService;
 import com.content.contentprocess.utils.ContentProcess;
 import lombok.AllArgsConstructor;
@@ -22,6 +23,7 @@ import java.io.*;
 @AllArgsConstructor
 public class ContentServiceImpl implements ContentService {
     private final ContentProcess content;
+    private final SaveDataListRedis redis;
 
     @Override
     public OrderRespond getProcessResultByContent(OrderRequest orderRequest,String mobile) {
@@ -36,7 +38,7 @@ public class ContentServiceImpl implements ContentService {
         } catch (JSONException e) {
             // 说明content不是JSON格式,进入普通字符串处理逻辑
             //向模型传递指令内容，并获取参数模板
-            Object template = dataSecondaryProcess(modelProcess(orderRequest.getOrderContent()),mobile);
+            Object template = dataSecondaryProcess(modelProcess(orderRequest.getOrderContent()),mobile, orderRequest.getOrderContent());
             return template!=null ? OrderRespond.ok(template) : OrderRespond.fail();
         }
         return null;
@@ -59,9 +61,13 @@ public class ContentServiceImpl implements ContentService {
     }
 
     //  参数模板二次处理，调用redis
-    public Object dataSecondaryProcess(String template, String mobile) {
+    public Object dataSecondaryProcess(String template, String mobile, String inputContent) {
         //打印参数模板日志
-        System.out.println(JSON.parseObject(template));
+        JSONObject jsonTemplate = JSON.parseObject(template);
+        System.out.println(jsonTemplate);
+        String orderType = jsonTemplate.getString("orderType");
+        jsonTemplate.remove("orderType");
+        redis.saveFeedback(orderType, jsonTemplate.toJSONString(), inputContent, mobile);
         return content.jsonProcess(JSON.parseObject(template),mobile);
     }
 }
