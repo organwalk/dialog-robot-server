@@ -18,7 +18,7 @@ import java.util.Map;
 
 @CrossOrigin
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api_c")
 @AllArgsConstructor
 public class SystemController {
     private SystemService systemService;

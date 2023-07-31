@@ -17,7 +17,7 @@ public class GetDataListRedisImpl implements GetDataListRedis {
 
     @Override
     public Object getGroupByName(String groupName,String mobile) {
-        String hashKeyNamePattern = "group:*" + groupName + "*:mobile:" + mobile;
+        String hashKeyNamePattern = "group:*" + groupName;
         Set<String> keys = redisTemplate.keys(hashKeyNamePattern);
         Object values = new Object();
         for (String key : keys) {
@@ -28,7 +28,7 @@ public class GetDataListRedisImpl implements GetDataListRedis {
 
     @Override
     public Object getDeptByName(String deptName,String mobile) {
-        String hashKeyNamePattern = "dept:*" + deptName + "*:mobile:" + mobile;
+        String hashKeyNamePattern = "dept:*" + deptName;
         Set<String> keys = redisTemplate.keys(hashKeyNamePattern);
         Object values = new Object();
         for (String key : keys) {
@@ -38,8 +38,8 @@ public class GetDataListRedisImpl implements GetDataListRedis {
     }
 
     @Override
-    public Object getPersonByName(String userName,String mobile) {
-        String hashKeyName = "dept_persion:" + userName + ":mobile:" + mobile;
+    public Object getPersonByDeptAndName(String userName,String deptName, String mobile) {
+        String hashKeyName = "dept_persion:" + deptName + ":" + userName;
         return redisTemplate.opsForHash().values(hashKeyName);
     }
 
@@ -47,22 +47,6 @@ public class GetDataListRedisImpl implements GetDataListRedis {
     public Object getUserByMobile(String mobile) {
         String hashKeyName = "user:mobile:"+mobile;
         return redisTemplate.opsForHash().values(hashKeyName);
-    }
-
-    @Override
-    public boolean deleteUserByMobile(String mobile) {
-        String hashKeyName = "mobile:"+mobile;
-        List<String> hashKeyNames = redisTemplate.opsForHash().values(hashKeyName);
-        if(hashKeyNames.isEmpty()){
-            return false;
-        }else {
-            for (String str:
-                    hashKeyNames) {
-                redisTemplate.delete(str);
-            }
-            redisTemplate.delete(hashKeyName);
-            return true;
-        }
     }
 
     @Override
@@ -95,5 +79,35 @@ public class GetDataListRedisImpl implements GetDataListRedis {
             result.add(feedback);
         }
         return result;
+    }
+
+    @Override
+    public boolean deleteUserByMobile(String mobile) {
+        Set<String> keys = redisTemplate.keys("*:mobile:"+mobile);
+        if(keys.isEmpty()){
+            return false;
+        }else {
+            redisTemplate.delete(keys);
+            return true;
+        }
+    }
+
+    @Override
+    public boolean deleteDept(String mobile) {
+        Set<String> keys = redisTemplate.keys("dept:*");
+        keys.addAll(redisTemplate.keys("group:*"));
+        redisTemplate.delete(keys);
+        return true;
+    }
+
+    @Override
+    public boolean deletePersonByName(String mobile, String deptName, String name) {
+        Set<String> keys = redisTemplate.keys("dept_persion:"+ deptName + ":" + name);
+        if(keys.isEmpty()){
+            return false;
+        }else {
+            redisTemplate.delete(keys);
+            return true;
+        }
     }
 }

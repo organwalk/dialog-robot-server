@@ -38,7 +38,7 @@ public class ContentServiceImpl implements ContentService {
         } catch (JSONException e) {
             // 说明content不是JSON格式,进入普通字符串处理逻辑
             //向模型传递指令内容，并获取参数模板
-            Object template = dataSecondaryProcess(modelProcess(orderRequest.getOrderContent()),mobile, orderRequest.getOrderContent());
+            Object template = dataSecondaryProcess(modelProcess(orderRequest.getOrderContent()), orderRequest.getDeptName(), mobile, orderRequest.getOrderContent());
             return template!=null ? OrderRespond.ok(template) : OrderRespond.fail();
         }
         return null;
@@ -61,13 +61,13 @@ public class ContentServiceImpl implements ContentService {
     }
 
     //  参数模板二次处理，调用redis
-    public Object dataSecondaryProcess(String template, String mobile, String inputContent) {
+    public Object dataSecondaryProcess(String template, String deptName, String mobile, String inputContent) {
         //打印参数模板日志
         JSONObject jsonTemplate = JSON.parseObject(template);
         System.out.println(jsonTemplate);
         String orderType = jsonTemplate.getString("orderType");
         jsonTemplate.remove("orderType");
         redis.saveFeedback(orderType, jsonTemplate.toJSONString(), inputContent, mobile);
-        return content.jsonProcess(JSON.parseObject(template),mobile);
+        return content.jsonProcess(JSON.parseObject(template),deptName,mobile);
     }
 }

@@ -20,7 +20,7 @@ import java.util.List;
 
 @CrossOrigin
 @RestController
-@RequestMapping("/api/data")
+@RequestMapping("/api_c/data")
 @AllArgsConstructor
 public class DataController {
     private final ScheduleService scheduleService;
@@ -37,7 +37,7 @@ public class DataController {
         List<Object> nameIdList = new ArrayList<>();
         //['张三','李四']假设这是nameArray的数据，应该遍历取出其中的人名，然后传入下面的方法
         for (String name : objectIdRequest.getNameArray()) {
-            nameIdList.add(getDataListRedis.getPersonByName(name, mobile));
+            nameIdList.add(getDataListRedis.getPersonByDeptAndName(name, objectIdRequest.getDeptName(),mobile));
         }
         return !nameIdList.isEmpty() ? ObjectIdArrayRespond.ok(nameIdList) : ObjectIdArrayRespond.fail();
     }
@@ -66,6 +66,11 @@ public class DataController {
                 StatusRespond.ok() : StatusRespond.fail();
     }
 
+    @DeleteMapping("/dept/group/{mobile}")
+    public StatusRespond saveDeptInfo(@PathVariable String mobile){
+        return getDataListRedis.deleteDept(mobile) ? StatusRespond.ok() : StatusRespond.fail();
+    }
+
     @PostMapping("/dept/person/{mobile}")
     public StatusRespond savePersonInfo(@PathVariable String mobile,
                                       @RequestBody PersonRequest personRequest){
@@ -83,6 +88,12 @@ public class DataController {
         return saveDataListRedis.saveUserInfo(userRequest) ?
                 StatusRespond.ok() : StatusRespond.fail();
    }
+
+    @DeleteMapping("/dept/person/{mobile}")
+    public StatusRespond deletePersonByName(@PathVariable String mobile, @RequestParam("name")String name, @RequestParam("deptName")String deptName){
+        return getDataListRedis.deletePersonByName(mobile, deptName, name) ? StatusRespond.ok() : StatusRespond.fail();
+    }
+
     @DeleteMapping("/delete/{mobile}")
     public void deleteScheduleDataRedis(@PathVariable String mobile){
        getDataListRedis.deleteUserByMobile(mobile);

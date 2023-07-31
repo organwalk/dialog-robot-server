@@ -7,6 +7,7 @@ import java.util.List;
 @Data
 public class PersonRequest {
     private String action;
+    private String deptName;
     private List<Dept> dept;
     @Data
     static public class Dept {

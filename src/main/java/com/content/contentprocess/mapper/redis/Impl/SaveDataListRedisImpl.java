@@ -20,10 +20,9 @@ public class SaveDataListRedisImpl implements SaveDataListRedis {
         List<GroupRequest.Group> group = groupRequest.getGroup();
         String hashKeyName = null;
         for (GroupRequest.Group groups : group){
-            hashKeyName = "group:" + groups.getGroupName() + ":mobile:" + mobile;
+            hashKeyName = "group:" + groups.getGroupName();
             redisTemplate.opsForHash().put(hashKeyName,"deptId",groups.getDeptId());
             redisTemplate.opsForHash().put(hashKeyName,"groupId",groups.getGroupId());
-            redisTemplate.opsForHash().put("mobile:"+mobile,groups.getGroupName(),hashKeyName);
         }
         return redisTemplate.getExpire(hashKeyName) != null ? true : false;
     }
@@ -34,11 +33,10 @@ public class SaveDataListRedisImpl implements SaveDataListRedis {
         String hashKeyName = null;
         for (DeptRequest.Dept dept : depts){
             for (DeptRequest.Departments departments : dept.getDepartments()){
-                hashKeyName = "dept:" + departments.getName() + ":mobile:" + mobile;
+                hashKeyName = "dept:" + departments.getName();
                 redisTemplate.opsForHash().put(hashKeyName,"deptId",departments.getDeptId());
                 redisTemplate.opsForHash().put(hashKeyName,"parentId",departments.getOrder());
                 redisTemplate.opsForHash().put(hashKeyName,"orderId",departments.getOrder());
-                redisTemplate.opsForHash().put("mobile:"+mobile,departments.getName(),hashKeyName);
             }
         }
 
@@ -51,12 +49,11 @@ public class SaveDataListRedisImpl implements SaveDataListRedis {
         String hashKeyName = null;
         for (PersonRequest.Dept dept : depts){
             for (PersonRequest.Users users : dept.getUsers()){
-                hashKeyName = "dept_persion:" + users.getName() + ":mobile:" + mobile;
+                hashKeyName = "dept_persion:" + personRequest.getDeptName() + ":" + users.getName();
                 redisTemplate.opsForHash().put(hashKeyName,"id",users.getId());
                 redisTemplate.opsForHash().put(hashKeyName,"mobile",users.getMobile());
                 redisTemplate.opsForHash().put(hashKeyName,"sequence",users.getSequence());
                 redisTemplate.opsForHash().put(hashKeyName,"orgId",users.getOrgId());
-                redisTemplate.opsForHash().put("mobile:"+mobile, users.getName(),hashKeyName);
             }
         }
         return redisTemplate.getExpire(hashKeyName) != null ? true : false;
@@ -68,7 +65,6 @@ public class SaveDataListRedisImpl implements SaveDataListRedis {
         redisTemplate.opsForHash().put(hashKeyName,"id",userRequest.getUid());
         redisTemplate.opsForHash().put(hashKeyName,"name",userRequest.getName());
         redisTemplate.opsForHash().put(hashKeyName,"dept",userRequest.getDeptName());
-        redisTemplate.opsForHash().put("mobile:"+userRequest.getMobile(),"personHash",hashKeyName);
         return redisTemplate.getExpire(hashKeyName) != null ? true : false;
     }
 

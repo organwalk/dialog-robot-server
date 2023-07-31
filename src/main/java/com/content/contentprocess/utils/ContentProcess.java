@@ -30,13 +30,13 @@ public class ContentProcess {
     private final NotificationMapper notificationMapper;
 
     // 参数模板二次处理
-    public Object jsonProcess(JSONObject jsonObject, String mobile){
+    public Object jsonProcess(JSONObject jsonObject, String deptName, String mobile){
         //  如果该参数模板存在 object 字段的值
         if (jsonObject.get("object") != null && !jsonObject.get("object").equals("") &&
                 !(jsonObject.get("object") instanceof JSONArray && ((JSONArray) jsonObject.get("object")).isEmpty())) {
             //  首先判断该字段是否属于人名
-            if (!receiversProcess(jsonObject,mobile).isEmpty()){
-                jsonObject.put("receivers",receiversProcess(jsonObject,mobile));
+            if (!receiversProcess(jsonObject,deptName,mobile).isEmpty()){
+                jsonObject.put("receivers",receiversProcess(jsonObject,deptName,mobile));
                 jsonObject.remove("object");
             }
             //  若不属于人名，则可能属于群名
@@ -125,7 +125,7 @@ public class ContentProcess {
         if (jsonObject.get("orderType").equals("FastAddNotes")){
             jsonObject.put("remindTime",getRemindTime(jsonObject));
             jsonObject.put("content",jsonObject.get("noteContent"));
-            jsonObject.put("members",getMembers(jsonObject,mobile));
+            jsonObject.put("members",getMembers(jsonObject,deptName,mobile));
             jsonObject.put("isPushMail",true);
             jsonObject.remove("timeDetected");
             jsonObject.remove("noteObject");
@@ -200,8 +200,8 @@ public class ContentProcess {
     // --------- 内部工具方法 -------------
 
     //  处理receivers字段的工具方法
-    private List<Object> receiversProcess(JSONObject jsonObject, String mobile){
-        return getUid((List) jsonObject.get("object"),mobile);
+    private List<Object> receiversProcess(JSONObject jsonObject, String deptName, String mobile){
+        return getUid((List) jsonObject.get("object"), deptName, mobile);
     }
 
     //  处理groupId字段的工具方法
@@ -232,7 +232,7 @@ public class ContentProcess {
 
     //  处理name字段的工具方法
     private String nameProcess(JSONObject jsonObject,String mobile){
-        List<Object> result = (List<Object>) getDataListRedis.getPersonByName(String.valueOf(jsonObject.get("name")),mobile);
+        List<Object> result = (List<Object>) getDataListRedis.getPersonByDeptAndName(String.valueOf(jsonObject.get("name")),String.valueOf(jsonObject.get("deptName")), mobile);
         if (!result.isEmpty()){
             return String.valueOf(result.get(0));
         }
@@ -319,17 +319,17 @@ public class ContentProcess {
         }
     }
 
-    private List<Map<String, Object>> getMembers(JSONObject jsonObject, String mobile) {
+    private List<Map<String, Object>> getMembers(JSONObject jsonObject, String deptName, String mobile) {
         List<String> names = (List<String>) jsonObject.get("noteObject");
         List<Map<String, Object>> members = new ArrayList<>();
         for (String name : names) {
-            List<Object> checkUid = (List<Object>) getDataListRedis.getPersonByName(name, mobile);
+            List<Object> checkUid = (List<Object>) getDataListRedis.getPersonByDeptAndName(name,deptName, mobile);
             if (!checkUid.isEmpty()) {
                 List<Map<String, Object>> tempList = names.stream()
                         .map(n -> {
                             Map<String, Object> map = new HashMap<>();
                             map.put("name", n);
-                            List<Object> uidList = (List<Object>) getDataListRedis.getPersonByName(n, mobile);
+                            List<Object> uidList = (List<Object>) getDataListRedis.getPersonByDeptAndName(name,deptName, mobile);
                             if (!uidList.isEmpty()) {
                                 map.put("uid", uidList.get(0));
                             }
@@ -343,13 +343,13 @@ public class ContentProcess {
         return new ArrayList<>();
     }
 
-    private List<Object> getUid(List<String> obj,String mobile){
+    private List<Object> getUid(List<String> obj,String deptName, String mobile){
         List<Object> uid = new ArrayList<>();
         for (String name : obj){
-            List<Object> checkUid = (List<Object>) getDataListRedis.getPersonByName(name,mobile);
+            List<Object> checkUid = (List<Object>) getDataListRedis.getPersonByDeptAndName(name,deptName, mobile);
             if (!checkUid.isEmpty()){
                 List<Object> tempList = obj.stream()
-                        .map(n -> (List<Object>) getDataListRedis.getPersonByName(n,mobile))
+                        .map(n -> (List<Object>) getDataListRedis.getPersonByDeptAndName(n,deptName, mobile))
                         .map(list -> list.get(0))
                         .collect(Collectors.toList());
                 uid.addAll(tempList);

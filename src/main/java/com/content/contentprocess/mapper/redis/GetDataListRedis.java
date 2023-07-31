@@ -10,9 +10,12 @@ import java.util.Map;
 public interface GetDataListRedis {
     Object getGroupByName(String groupName, String mobile);
     Object getDeptByName(String deptName, String mobile);
-    Object getPersonByName(String username,String mobile);
+    Object getPersonByDeptAndName(String username,String deptName, String mobile);
     Object getUserByMobile(String mobile);
-    boolean deleteUserByMobile(String mobile);
     List<IntentionAndEntityResult> getIntentionAndEntity(String mobile);
+    boolean deleteUserByMobile(String mobile);
+    boolean deleteDept(String mobile);
+    boolean deletePersonByName(String mobile, String deptName, String name);
+
 
 }

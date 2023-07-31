@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api_c")
 @AllArgsConstructor
 public class OrderController {
     private final ContentService contentService;

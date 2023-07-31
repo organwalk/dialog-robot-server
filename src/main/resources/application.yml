@@ -1,5 +1,10 @@
 server:
   port: 8180
+  ssl:
+    enabled: true
+    key-store: classpath:ssleye2023073023501160.jks
+    key-store-password: pwofXNO
+    key-store-type: JKS
 
 spring:
   datasource:

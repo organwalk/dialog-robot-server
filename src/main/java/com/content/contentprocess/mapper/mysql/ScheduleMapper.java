@@ -46,8 +46,8 @@ public interface ScheduleMapper extends BaseMapper<ScheduleTable> {
     @Select("SELECT * FROM schedule " +
             "WHERE (JSON_SEARCH(members, 'one', #{uid}, NULL, '$[*].uid') IS NOT NULL " +
             "OR uid=#{uid}) " +
-            "AND DATE(CONVERT_TZ(FROM_UNIXTIME(begintime / 1000), 'UTC', 'Asia/Shanghai')) = " +
-            "DATE(CONVERT_TZ(FROM_UNIXTIME(#{g_time} / 1000), 'UTC', 'Asia/Shanghai'));")
+            "AND ((DATE(CONVERT_TZ(FROM_UNIXTIME(begintime / 1000), 'UTC', 'Asia/Shanghai')) <= DATE(CONVERT_TZ(FROM_UNIXTIME(#{g_time} / 1000), 'UTC', 'Asia/Shanghai'))" +
+            "AND DATE(CONVERT_TZ(FROM_UNIXTIME(endtime / 1000), 'UTC', 'Asia/Shanghai')) >= DATE(CONVERT_TZ(FROM_UNIXTIME(#{g_time} / 1000), 'UTC', 'Asia/Shanghai'))))")
     @Results(id = "selectList",
             value = {
             @Result(property = "uid",column = "uid"),
