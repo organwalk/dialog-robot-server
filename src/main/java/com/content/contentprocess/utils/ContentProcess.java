@@ -31,6 +31,9 @@ public class ContentProcess {
 
     // 参数模板二次处理
     public Object jsonProcess(JSONObject jsonObject, String deptName, String mobile){
+        if (jsonObject.getString("orderType").matches("^(?!OAMsg|SendMsg).*Msg.*$")) {
+            jsonObject.put("replyUseObject",jsonObject.get("object"));
+        }
         //  如果该参数模板存在 object 字段的值
         if (jsonObject.get("object") != null && !jsonObject.get("object").equals("") &&
                 !(jsonObject.get("object") instanceof JSONArray && ((JSONArray) jsonObject.get("object")).isEmpty())) {
@@ -70,8 +73,8 @@ public class ContentProcess {
             if (jsonObject.get("orderType").equals("AddDept") || jsonObject.get("orderType").equals("DelDept")) {
                 return jsonObject;
             }
-            jsonObject.put("dept", deptIdProcess(jsonObject, mobile).isEmpty() ?
-                    "" : Long.valueOf(deptIdProcess(jsonObject, mobile)));
+            jsonObject.put("dept", deptIdProcess(deptName, mobile).isEmpty() ?
+                    "" : Long.valueOf(deptIdProcess(deptName, mobile)));
         }
 
         if (jsonObject.containsKey("name")) {
@@ -221,8 +224,8 @@ public class ContentProcess {
     }
 
     //  处理deptId字段的工具方法
-    private String deptIdProcess(JSONObject jsonObject,String mobile){
-        Object result = getDataListRedis.getDeptByName(String.valueOf(jsonObject.get("dept")),mobile);
+    private String deptIdProcess(String deptName, String mobile){
+        Object result = getDataListRedis.getDeptByName(String.valueOf(deptName),mobile);
         if (result instanceof List){
             List<Object> deptId = (List<Object>) result;
             return String.valueOf(deptId.get(0));
