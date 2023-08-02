@@ -57,8 +57,8 @@ public class ContentServiceImpl implements ContentService {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         executor.setStreamHandler(new PumpStreamHandler(stream, stream));
         executor.execute(commandLine);
-//        return stream.toString("UTF-8");
-        return stream.toString("GBK");
+        return stream.toString("UTF-8");
+//        return stream.toString("GBK");
     }
 
     //  参数模板二次处理，调用redis

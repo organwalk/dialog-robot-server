@@ -2,6 +2,7 @@ package com.content.contentprocess.mapper.redis.Impl;
 
 import com.content.contentprocess.entity.table.IntentionAndEntityResult;
 import com.content.contentprocess.mapper.redis.GetDataListRedis;
+import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -27,9 +28,12 @@ public class GetDataListRedisImpl implements GetDataListRedis {
     }
 
     @Override
-    public Object getDeptByName(String deptName,String mobile) {
+    public Object getDeptByName(String deptName, String mobile) {
         String hashKeyNamePattern = "dept:*" + deptName;
         Set<String> keys = redisTemplate.keys(hashKeyNamePattern);
+        if (keys.isEmpty()) {
+            return new Object(); // 返回一个空对象
+        }
         Object values = new Object();
         for (String key : keys) {
             values = redisTemplate.opsForHash().values(key);

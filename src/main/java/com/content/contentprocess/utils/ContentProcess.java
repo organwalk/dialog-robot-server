@@ -69,23 +69,41 @@ public class ContentProcess {
             }
         }
 
+        if (jsonObject.containsKey("name")) {
+            String nameResult = nameProcess(jsonObject, mobile);
+            if(!jsonObject.getString("orderType").equals("AddMan") && !jsonObject.getString("orderType").equals("DelMan")){
+                if (!nameResult.isEmpty()) {
+                    jsonObject.put("uid", Long.valueOf(nameResult));
+                }
+                else if (jsonObject.getString("orderType").equals("GetManDept")){
+                    jsonObject.put("deptName",deptName);
+                    String gmdName = nameProcess(jsonObject, mobile);
+                    if (!gmdName.isEmpty()) {
+                        jsonObject.put("uid", Long.valueOf(gmdName));
+                    }else {
+                        jsonObject.put("name","");
+                    }
+                    jsonObject.remove("deptName");
+                }
+                else {
+                    if (!jsonObject.containsKey("dept")){
+                        jsonObject.remove("name");
+                    }
+                }
+            }
+        }
+
         if (jsonObject.containsKey("dept")) {
             if (jsonObject.get("orderType").equals("AddDept") || jsonObject.get("orderType").equals("DelDept")) {
                 return jsonObject;
             }
-            jsonObject.put("dept", deptIdProcess(deptName, mobile).isEmpty() ?
-                    "" : Long.valueOf(deptIdProcess(deptName, mobile)));
-        }
-
-        if (jsonObject.containsKey("name")) {
-            String nameResult = nameProcess(jsonObject, mobile);
-            if (!nameResult.isEmpty()) {
-                jsonObject.put("uid", Long.valueOf(nameResult));
-                if (!jsonObject.get("orderType").equals("GetMan") && !jsonObject.get("orderType").equals("GetManDept")) {
-                    jsonObject.remove("name");
-                }
-            } else {
-                jsonObject.put("name", "");
+            else if (jsonObject.get("orderType").equals("GetMan")){
+                jsonObject.put("dept", deptIdProcess(jsonObject.getString("dept"), mobile).isEmpty() ?
+                        "" : Long.valueOf(deptIdProcess(jsonObject.getString("dept"), mobile)));
+                System.out.println(jsonObject);
+            }else {
+                jsonObject.put("dept", deptIdProcess(deptName, mobile).isEmpty() ?
+                        "" : Long.valueOf(deptIdProcess(deptName, mobile)));
             }
         }
 
@@ -193,7 +211,6 @@ public class ContentProcess {
                 jsonObject.remove("timeDetected");
             }
         }
-
         return jsonObject;
     }
 
@@ -225,17 +242,24 @@ public class ContentProcess {
 
     //  处理deptId字段的工具方法
     private String deptIdProcess(String deptName, String mobile){
-        Object result = getDataListRedis.getDeptByName(String.valueOf(deptName),mobile);
-        if (result instanceof List){
-            List<Object> deptId = (List<Object>) result;
-            return String.valueOf(deptId.get(0));
+        if (!deptName.equals("")){
+            Object result = getDataListRedis.getDeptByName(deptName,mobile);
+            if (result instanceof List){
+                List<Object> deptId = (List<Object>) result;
+                return String.valueOf(deptId.get(0));
+            }
         }
         return "";
     }
 
     //  处理name字段的工具方法
     private String nameProcess(JSONObject jsonObject,String mobile){
-        List<Object> result = (List<Object>) getDataListRedis.getPersonByDeptAndName(String.valueOf(jsonObject.get("name")),String.valueOf(jsonObject.get("deptName")), mobile);
+        List<Object> result;
+        if (jsonObject.getString("orderType").equals("GetMan")){
+            result = (List<Object>) getDataListRedis.getPersonByDeptAndName(jsonObject.getString("name"),jsonObject.getString("dept"), mobile);
+        }else {
+            result = (List<Object>) getDataListRedis.getPersonByDeptAndName(jsonObject.getString("name"),jsonObject.getString("deptName"), mobile);
+        }
         if (!result.isEmpty()){
             return String.valueOf(result.get(0));
         }
