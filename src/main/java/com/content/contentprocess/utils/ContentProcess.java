@@ -9,9 +9,15 @@ import com.content.contentprocess.entity.table.ScheduleTable;
 import com.content.contentprocess.mapper.mysql.NotificationMapper;
 import com.content.contentprocess.mapper.mysql.ScheduleMapper;
 import com.content.contentprocess.mapper.redis.GetDataListRedis;
+import com.mysql.cj.xdevapi.JsonArray;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
+
+import org.jsoup.nodes.Document;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -20,6 +26,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Component
@@ -107,6 +116,14 @@ public class ContentProcess {
             }
         }
 
+        if (jsonObject.containsKey("mobile")){
+            if (!jsonObject.getString("mobile").equals("")){
+                if (jsonObject.getString("mobile").length() != 11){
+                    jsonObject.put("mobile","");
+                }
+            }
+        }
+
         if (jsonObject.get("orderType").equals("TimeQueryPlan") && jsonObject.containsKey("timeDetected")){
             List<String> time = (List<String>) jsonObject.get("timeDetected");
             List<ScheduleTable> data;
@@ -129,6 +146,30 @@ public class ContentProcess {
             }
             jsonObject.put("nameQueryPlanData",scheduleProcessToHTML(data));
             jsonObject.remove("planName");
+        }
+
+        if (jsonObject.getString("orderType").equals("LinkMsg") || jsonObject.getString("orderType").equals("MulMsg")){
+            String webUrl = jsonObject.getString("url");
+            Pattern pattern = Pattern.compile("^(?!https://).*");
+            Matcher matcher = pattern.matcher(webUrl);
+            if (matcher.matches()) {
+                webUrl = "https://" + webUrl;
+            }
+            try {
+                if (!webUrl.equals("")){
+                    Document doc = Jsoup.connect(webUrl).get();
+                    if (jsonObject.getString("title").equals("")){
+                        jsonObject.put("title",doc.title());
+                    }
+                    if (jsonObject.getString("content").equals("")) {
+                        Element mainContent = doc.body();
+                        jsonObject.put("content",mainContent.text().substring(0,50));
+                    }
+                }
+            } catch (Exception e) {
+                jsonObject.put("title","");
+                jsonObject.put("content","");
+            }
         }
 
         if (jsonObject.get("orderType").equals("ContentQueryPlan") && jsonObject.containsKey("planContent")){
@@ -334,13 +375,15 @@ public class ContentProcess {
     @SneakyThrows
     private String getRemindTime(JSONObject jsonObject){
         List<String> timeList = (List<String>) jsonObject.get("timeDetected");
-        if (timeList.isEmpty()){
+        if (timeList.isEmpty()) {
             DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai")); // 设置时区为北京时间
             Date date = dateFormat.parse(getStrNow());
             return String.valueOf(date.getTime());
-        }else {
+        } else {
             String time = timeList.get(0);
             DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai")); // 设置时区为北京时间
             Date date = dateFormat.parse(time);
             return String.valueOf(date.getTime());
         }
@@ -349,41 +392,42 @@ public class ContentProcess {
     private List<Map<String, Object>> getMembers(JSONObject jsonObject, String deptName, String mobile) {
         List<String> names = (List<String>) jsonObject.get("noteObject");
         List<Map<String, Object>> members = new ArrayList<>();
-        for (String name : names) {
-            List<Object> checkUid = (List<Object>) getDataListRedis.getPersonByDeptAndName(name,deptName, mobile);
-            if (!checkUid.isEmpty()) {
-                List<Map<String, Object>> tempList = names.stream()
-                        .map(n -> {
-                            Map<String, Object> map = new HashMap<>();
-                            map.put("name", n);
-                            List<Object> uidList = (List<Object>) getDataListRedis.getPersonByDeptAndName(name,deptName, mobile);
-                            if (!uidList.isEmpty()) {
-                                map.put("uid", uidList.get(0));
-                            }
-                            return map;
-                        })
-                        .collect(Collectors.toList());
-                members.addAll(tempList);
-                return members;
-            }
+        AtomicBoolean atomicExistNull = new AtomicBoolean(false);
+        List<Map<String, Object>> tempList = names.stream()
+                .map(n -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("name", n);
+                    List<Object> uidList = (List<Object>) getDataListRedis.getPersonByDeptAndName(n,deptName, mobile);
+                    System.out.println(uidList);
+                    if (!uidList.isEmpty()) {
+                        map.put("uid", uidList.get(0));
+                    }else {
+                        map.put("uid","");
+                        atomicExistNull.set(true);
+                    }
+                    return map;
+                })
+                .collect(Collectors.toList());
+        members.addAll(tempList);
+        if (members.isEmpty() || atomicExistNull.get()){
+            return new ArrayList<>();
+        }else {
+            return members;
         }
-        return new ArrayList<>();
     }
 
     private List<Object> getUid(List<String> obj,String deptName, String mobile){
         List<Object> uid = new ArrayList<>();
-        for (String name : obj){
-            List<Object> checkUid = (List<Object>) getDataListRedis.getPersonByDeptAndName(name,deptName, mobile);
-            if (!checkUid.isEmpty()){
-                List<Object> tempList = obj.stream()
-                        .map(n -> (List<Object>) getDataListRedis.getPersonByDeptAndName(n,deptName, mobile))
-                        .map(list -> list.get(0))
-                        .collect(Collectors.toList());
-                uid.addAll(tempList);
-                return uid;
-            }
+        List<Object> tempList = obj.stream()
+                .map(n -> (List<Object>) getDataListRedis.getPersonByDeptAndName(n,deptName, mobile))
+                .map(list -> !list.isEmpty() ? list.get(0) : "")
+                .collect(Collectors.toList());
+        uid.addAll(tempList);
+        if (uid.isEmpty() || uid.contains("")){
+            return new ArrayList<>();
+        }else {
+            return uid;
         }
-        return new ArrayList<>();
     }
 
     private String getStrNow(){

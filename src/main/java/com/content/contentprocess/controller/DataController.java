@@ -35,7 +35,6 @@ public class DataController {
     public ObjectIdArrayRespond getUidByNameList(@PathVariable String mobile,
                                                  @RequestBody ObjectIdRequest objectIdRequest){
         List<Object> nameIdList = new ArrayList<>();
-        //['张三','李四']假设这是nameArray的数据，应该遍历取出其中的人名，然后传入下面的方法
         for (String name : objectIdRequest.getNameArray()) {
             nameIdList.add(getDataListRedis.getPersonByDeptAndName(name, objectIdRequest.getDeptName(),mobile));
         }
